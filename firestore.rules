@@ -1,0 +1,181 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: /users/{userId}
+    // Document ID: userId (Firebase Auth UID)
+    // Fields:
+    //   - email: string (required, email format)
+    //   - loyaltyScore: number (required, >= 0)
+    //   - createdAt: string (required, ISO 8601)
+    //
+    // Collection: /destinations/{destId}
+    // Document ID: auto-generated
+    // Fields:
+    //   - name: string (required, 1-100 chars)
+    //   - region: string (required, 1-100 chars)
+    //   - country: string (required, 1-100 chars)
+    //   - baseCostIndex: number (required, > 0)
+    //   - description: string (required, 1-1000 chars)
+    //   - avgHotelPrice: number (required, > 0)
+    //   - imageUrl: string (optional, URL format)
+    //
+    // Collection: /trips/{tripId}
+    // Document ID: auto-generated
+    // Fields:
+    //   - userId: string (required, matches owner)
+    //   - origin: string (required, 1-100 chars)
+    //   - destinationId: string (required)
+    //   - startDate: string (required, ISO 8601)
+    //   - endDate: string (required, ISO 8601)
+    //   - travelerCount: number (required, > 0)
+    //   - budgetLevel: string (required, enum: budget, mid, luxury)
+    //   - createdAt: string (required, ISO 8601)
+    //
+    // Collection: /trips/{tripId}/routes/{routeId}
+    // Fields:
+    //   - tripId: string (required, matches parent)
+    //   - type: string (required, enum: bus, taxi)
+    //   - duration: number (required, > 0)
+    //   - estimatedCost: number (required, >= 0)
+    //   - provider: string (required, 1-100 chars)
+    //   - metadata: map (optional)
+    //
+    // Collection: /deals/{dealId}
+    // Fields:
+    //   - title: string (required, 1-100 chars)
+    //   - discountType: string (required, enum: percentage, fixed)
+    //   - value: number (required, > 0)
+    //   - eligibilityRule: string (required, 1-500 chars)
+    //   - expiresAt: string (required, ISO 8601)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "robs46859@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidDateString(dateStr) {
+      return dateStr is string && dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+    }
+
+    function isValidUrl(url) {
+      return url is string && (url.matches("^https://.*") || url.matches("^http://.*"));
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return hasRequiredFields(['email', 'loyaltyScore', 'createdAt']) &&
+             isValidEmail(data.email) &&
+             data.loyaltyScore is int && data.loyaltyScore >= 0 &&
+             isValidDateString(data.createdAt);
+    }
+
+    function isValidDestination(data) {
+      return hasRequiredFields(['name', 'region', 'country', 'baseCostIndex', 'description', 'avgHotelPrice']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.region is string && data.region.size() > 0 && data.region.size() <= 100 &&
+             data.country is string && data.country.size() > 0 && data.country.size() <= 100 &&
+             data.baseCostIndex is number && data.baseCostIndex > 0 &&
+             data.description is string && data.description.size() > 0 && data.description.size() <= 1000 &&
+             data.avgHotelPrice is number && data.avgHotelPrice > 0 &&
+             (!('imageUrl' in data) || isValidUrl(data.imageUrl));
+    }
+
+    function isValidTrip(data) {
+      return hasRequiredFields(['userId', 'origin', 'destinationId', 'startDate', 'endDate', 'travelerCount', 'budgetLevel', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.origin is string && data.origin.size() > 0 && data.origin.size() <= 100 &&
+             data.destinationId is string &&
+             isValidDateString(data.startDate) &&
+             isValidDateString(data.endDate) &&
+             data.travelerCount is int && data.travelerCount > 0 &&
+             data.budgetLevel in ['budget', 'mid', 'luxury'] &&
+             isValidDateString(data.createdAt);
+    }
+
+    function isValidDeal(data) {
+      return hasRequiredFields(['title', 'discountType', 'value', 'eligibilityRule', 'expiresAt']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 100 &&
+             data.discountType in ['percentage', 'fixed'] &&
+             data.value is number && data.value > 0 &&
+             data.eligibilityRule is string && data.eligibilityRule.size() > 0 && data.eligibilityRule.size() <= 500 &&
+             isValidDateString(data.expiresAt);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) && (!('role' in request.resource.data) || isAdmin());
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == resource.data.role || isAdmin());
+    }
+
+    match /destinations/{destId} {
+      allow read: if true; // Publicly readable for discovery
+      allow write: if isAdmin() && isValidDestination(request.resource.data);
+    }
+
+    match /trips/{tripId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidTrip(request.resource.data);
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid && isValidTrip(request.resource.data);
+      allow delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+
+      match /routes/{routeId} {
+        allow read: if isAuthenticated() && (get(/databases/$(database)/documents/trips/$(tripId)).data.userId == request.auth.uid || isAdmin());
+        allow write: if isAuthenticated() && get(/databases/$(database)/documents/trips/$(tripId)).data.userId == request.auth.uid;
+      }
+
+      match /budgets/{budgetId} {
+        allow read: if isAuthenticated() && (get(/databases/$(database)/documents/trips/$(tripId)).data.userId == request.auth.uid || isAdmin());
+        allow write: if isAuthenticated() && get(/databases/$(database)/documents/trips/$(tripId)).data.userId == request.auth.uid;
+      }
+    }
+
+    match /deals/{dealId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidDeal(request.resource.data);
+    }
+
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

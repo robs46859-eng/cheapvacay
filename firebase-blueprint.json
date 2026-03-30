@@ -1,0 +1,133 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and loyalty information.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "loyaltyScore": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "loyaltyScore", "createdAt"]
+    },
+    "Destination": {
+      "title": "Destination",
+      "description": "Travel destination details.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "region": { "type": "string" },
+        "country": { "type": "string" },
+        "baseCostIndex": { "type": "number" },
+        "description": { "type": "string" },
+        "avgHotelPrice": { "type": "number" },
+        "imageUrl": { "type": "string", "format": "uri" }
+      },
+      "required": ["name", "region", "country", "baseCostIndex", "description", "avgHotelPrice"]
+    },
+    "Trip": {
+      "title": "Trip",
+      "description": "A trip planned by a user.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "origin": { "type": "string" },
+        "destinationId": { "type": "string" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "travelerCount": { "type": "integer" },
+        "budgetLevel": { "type": "string", "enum": ["budget", "mid", "luxury"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "origin", "destinationId", "startDate", "endDate", "travelerCount", "budgetLevel", "createdAt"]
+    },
+    "Route": {
+      "title": "Route",
+      "description": "Transport route for a trip.",
+      "type": "object",
+      "properties": {
+        "tripId": { "type": "string" },
+        "type": { "type": "string", "enum": ["bus", "taxi"] },
+        "duration": { "type": "integer" },
+        "estimatedCost": { "type": "number" },
+        "provider": { "type": "string" },
+        "metadata": { "type": "object" }
+      },
+      "required": ["tripId", "type", "duration", "estimatedCost", "provider"]
+    },
+    "Budget": {
+      "title": "Budget",
+      "description": "Budget breakdown for a trip.",
+      "type": "object",
+      "properties": {
+        "tripId": { "type": "string" },
+        "transportCost": { "type": "number" },
+        "hotelCost": { "type": "number" },
+        "foodEstimate": { "type": "number" },
+        "activitiesCost": { "type": "number" },
+        "miscCost": { "type": "number" },
+        "buffer": { "type": "number" },
+        "totalCost": { "type": "number" }
+      },
+      "required": ["tripId", "transportCost", "hotelCost", "foodEstimate", "activitiesCost", "miscCost", "buffer", "totalCost"]
+    },
+    "Rating": {
+      "title": "Rating",
+      "description": "User ratings for a trip.",
+      "type": "object",
+      "properties": {
+        "tripId": { "type": "string" },
+        "costScore": { "type": "integer" },
+        "safetyScore": { "type": "integer" },
+        "comfortScore": { "type": "integer" },
+        "timeScore": { "type": "integer" },
+        "reliabilityScore": { "type": "integer" }
+      },
+      "required": ["tripId", "costScore", "safetyScore", "comfortScore", "timeScore", "reliabilityScore"]
+    },
+    "Deal": {
+      "title": "Deal",
+      "description": "Travel deals and discounts.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "discountType": { "type": "string", "enum": ["percentage", "fixed"] },
+        "value": { "type": "number" },
+        "eligibilityRule": { "type": "string" },
+        "expiresAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "discountType", "value", "eligibilityRule", "expiresAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles."
+    },
+    "/destinations/{destId}": {
+      "schema": "Destination",
+      "description": "Available destinations."
+    },
+    "/trips/{tripId}": {
+      "schema": "Trip",
+      "description": "User trips."
+    },
+    "/trips/{tripId}/routes/{routeId}": {
+      "schema": "Route",
+      "description": "Routes for a specific trip."
+    },
+    "/trips/{tripId}/budgets/{budgetId}": {
+      "schema": "Budget",
+      "description": "Budget for a specific trip."
+    },
+    "/trips/{tripId}/ratings/{ratingId}": {
+      "schema": "Rating",
+      "description": "Ratings for a specific trip."
+    },
+    "/deals/{dealId}": {
+      "schema": "Deal",
+      "description": "Global travel deals."
+    }
+  }
+}

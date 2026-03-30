@@ -1,0 +1,7 @@
+{
+  "name": "Budget Travel Planner",
+  "description": "A production-grade travel planning application focused on affordable trips in India with AI-powered budget optimization.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

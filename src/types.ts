@@ -72,8 +72,25 @@ export interface Rating {
 export interface Deal {
   id: string;
   title: string;
+  description: string;
+  code: string;
   discountType: 'percentage' | 'fixed';
   value: number;
   eligibilityRule: string;
   expiresAt: string;
+}
+
+export interface SavedTrip {
+  id: string;
+  destinationId: string;
+  destinationName: string;
+  origin: string;
+  startDate: string;
+  endDate: string;
+  travelerCount: number;
+  budgetLevel: BudgetLevel;
+  transportLabel: string;
+  totalCost: number;
+  createdAt: string;
+  status: 'draft' | 'ready';
 }

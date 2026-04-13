@@ -4,66 +4,19 @@ import { GoogleGenAI } from '@google/genai';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
-dotenv.config();
+import { getDeals, getDestinationById, getDestinations } from './src/lib/server/dataStore.ts';
+import { generateLaunchRoutes } from './src/lib/server/launchData.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const PORT = Number(process.env.PORT ?? 3000);
+// Load `.env` from the project root (next to this file), not only `process.cwd()`,
+// so `npm run dev` still works when the shell cwd is not the repo root.
+const envPath = path.join(__dirname, '.env');
+dotenv.config({ path: envPath });
+dotenv.config({ path: path.join(__dirname, '.env.local'), override: true });
 
-const destinations = [
-  {
-    id: '1',
-    name: 'Manali',
-    region: 'Himachal Pradesh',
-    country: 'India',
-    baseCostIndex: 0.8,
-    description: 'A Himalayan resort town with cooler weather, mountain views, and easy access to budget buses from north Indian cities.',
-    avgHotelPrice: 1500,
-    imageUrl: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    id: '2',
-    name: 'Goa',
-    region: 'West Coast',
-    country: 'India',
-    baseCostIndex: 1.2,
-    description: 'Popular beach destination with a wide spread of stays, nightlife, and seasonal price swings.',
-    avgHotelPrice: 2500,
-    imageUrl: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    id: '3',
-    name: 'Jaipur',
-    region: 'Rajasthan',
-    country: 'India',
-    baseCostIndex: 1.0,
-    description: 'Historic city with forts, markets, and relatively accessible mid-budget accommodation.',
-    avgHotelPrice: 2000,
-    imageUrl: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    id: '4',
-    name: 'Munnar',
-    region: 'Kerala',
-    country: 'India',
-    baseCostIndex: 1.1,
-    description: 'Tea estates, hills, and scenic stays where local transport can shape the final budget more than hotel price.',
-    avgHotelPrice: 2200,
-    imageUrl: 'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    id: '5',
-    name: 'Varanasi',
-    region: 'Uttar Pradesh',
-    country: 'India',
-    baseCostIndex: 0.7,
-    description: 'Dense, spiritual, and highly budget-flexible for travelers prioritizing low accommodation spend.',
-    avgHotelPrice: 1200,
-    imageUrl: 'https://images.unsplash.com/photo-1561361058-c24cecae35ca?auto=format&fit=crop&w=1200&q=80',
-  },
-];
+const PORT = Number(process.env.PORT ?? 3000);
 
 function getBudgetMultiplier(budgetLevel?: string) {
   switch (budgetLevel) {
@@ -76,44 +29,25 @@ function getBudgetMultiplier(budgetLevel?: string) {
   }
 }
 
-function generateRoutes(origin: string, destinationId: string, travelers = 1, budgetLevel = 'budget') {
-  const destination = destinations.find((item) => item.id === destinationId);
-  if (!destination) {
-    return null;
-  }
+const GEMINI_PLACEHOLDERS = new Set(
+  ['', 'your_gemini_api_key', 'your_key_here', 'your_api_key_here'].map((s) => s.toLowerCase()),
+);
 
-  const budgetMultiplier = getBudgetMultiplier(budgetLevel);
-  const travelerMultiplier = Math.max(1, travelers);
-
-  return [
-    {
-      id: `bus-${destinationId}`,
-      tripId: '',
-      type: 'bus',
-      duration: 480,
-      estimatedCost: Math.round(700 * destination.baseCostIndex * travelerMultiplier),
-      provider: `${origin} State Transport`,
-      metadata: { stops: 4, amenities: ['AC', 'Recliner'] },
-    },
-    {
-      id: `train-taxi-${destinationId}`,
-      tripId: '',
-      type: 'taxi',
-      duration: 360,
-      estimatedCost: Math.round(2800 * destination.baseCostIndex * Math.max(1, travelerMultiplier / 2) * budgetMultiplier),
-      provider: 'Private Transfer',
-      metadata: { stops: 2, amenities: ['Door pickup'] },
-    },
-  ];
+function resolveGeminiApiKey(): string | undefined {
+  const raw = process.env.GEMINI_API_KEY?.trim();
+  if (!raw) return undefined;
+  const lower = raw.toLowerCase();
+  if (GEMINI_PLACEHOLDERS.has(lower)) return undefined;
+  return raw;
 }
 
 async function generateAssistantResponse(message: string, tripContext: unknown, destinationContext: unknown) {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = resolveGeminiApiKey();
 
   if (!apiKey) {
     return [
       'AI assistant is not configured yet.',
-      'Set `GEMINI_API_KEY` in your `.env` before using launch demos.',
+      'Create a `.env` file in the project root (copy from `.env.example`) and set a real `GEMINI_API_KEY` from Google AI Studio.',
     ].join(' ');
   }
 
@@ -122,7 +56,8 @@ async function generateAssistantResponse(message: string, tripContext: unknown, 
     'You are a budget travel planning assistant for CheapVacay India.',
     'Keep answers concise, practical, and launch-safe.',
     'Focus on affordable India travel, route tradeoffs, seasonality, hotel savings, and budget risk.',
-    'Do not invent live prices or claim supplier integrations exist.',
+    'Use destination facts provided in context when available, including best months, local transport notes, and budget highlights.',
+    'Do not invent live prices or claim supplier integrations or live supplier inventory exist.',
     'If context is missing, state the assumption and give the cheapest practical option first.',
   ].join(' ');
 
@@ -155,8 +90,14 @@ async function startServer() {
   const app = express();
   app.use(express.json());
 
-  app.get('/api/destinations', (_req, res) => {
+  app.get('/api/destinations', async (_req, res) => {
+    const destinations = await getDestinations();
     res.json(destinations);
+  });
+
+  app.get('/api/deals', async (_req, res) => {
+    const deals = await getDeals();
+    res.json(deals);
   });
 
   app.post('/api/budget/calculate', (req, res) => {
@@ -166,11 +107,14 @@ async function startServer() {
     const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
     const budgetMultiplier = getBudgetMultiplier(trip.budgetLevel);
 
-    const foodPerDay = 500 * trip.travelerCount * destination.baseCostIndex * (budgetMultiplier * 0.95);
+    const sampleDailyBudget = trip.budgetLevel === 'budget'
+      ? Number(destination.sampleBudgetPerDay ?? 500)
+      : Number(destination.sampleMidBudgetPerDay ?? 800);
+    const foodPerDay = Math.max(450, sampleDailyBudget * 0.28) * trip.travelerCount * (budgetMultiplier * 0.95);
     const transportCost = routes.reduce((sum: number, route: { estimatedCost: number }) => sum + route.estimatedCost, 0);
     const hotelCost = destination.avgHotelPrice * days * Math.max(1, Math.ceil(trip.travelerCount / 2)) * budgetMultiplier;
-    const activitiesCost = 850 * days * destination.baseCostIndex * budgetMultiplier;
-    const miscCost = 400 * days * budgetMultiplier;
+    const activitiesCost = Math.max(700, sampleDailyBudget * 0.33) * days * destination.baseCostIndex * Math.max(1, budgetMultiplier * 0.92);
+    const miscCost = Math.max(300, sampleDailyBudget * 0.18) * days * Math.max(1, budgetMultiplier * 0.9);
 
     const subtotal = foodPerDay * days + transportCost + hotelCost + activitiesCost + miscCost;
     const buffer = subtotal * 0.1;
@@ -187,15 +131,16 @@ async function startServer() {
     });
   });
 
-  app.post('/api/routes/generate', (req, res) => {
+  app.post('/api/routes/generate', async (req, res) => {
     const { origin, destinationId, travelers, budgetLevel } = req.body;
-    const routes = generateRoutes(origin, destinationId, travelers, budgetLevel);
+    const destination = await getDestinationById(destinationId);
 
-    if (!routes) {
+    if (!destination) {
       res.status(404).json({ error: 'Destination not found' });
       return;
     }
 
+    const routes = generateLaunchRoutes(origin, destination, travelers, budgetLevel);
     res.json(routes);
   });
 
@@ -232,6 +177,11 @@ async function startServer() {
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`CheapVacay India running on http://localhost:${PORT}`);
+    if (!resolveGeminiApiKey()) {
+      console.warn(
+        `[CheapVacay] GEMINI_API_KEY is missing or still a placeholder. Loaded env from: ${envPath}`,
+      );
+    }
   });
 }
 

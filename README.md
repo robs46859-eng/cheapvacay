@@ -18,6 +18,7 @@ CheapVacay India is a launch-focused MVP for budget trip planning across India. 
 - TypeScript
 - Tailwind CSS 4
 - Gemini via `@google/genai`
+- Postgres-ready data layer via `pg`
 
 ## Local Setup
 
@@ -32,6 +33,8 @@ npm ci
 ```env
 PORT=3000
 GEMINI_API_KEY=your_gemini_api_key
+DATABASE_URL=postgresql://user:password@localhost:5432/cheapvacay
+DATABASE_SSL=false
 ```
 
 ### 3. Run the app
@@ -53,10 +56,19 @@ npm start
 
 ## Notes
 
-- The current release is intentionally mock-data driven for destinations and transport options.
+- The app now ships with a curated launch dataset for destinations, route heuristics, and launch offers.
+- If `DATABASE_URL` is set, the server will read destinations and deals from Postgres and fall back to the bundled launch dataset if the database is unavailable.
 - Saved trips are stored in browser local storage.
 - Firebase files are present, but auth and synced persistence are not part of the current launch slice.
-- Database SQL files exist in the repo but are not used by the running application.
+- Database SQL files now match the launch data model closely enough to support Postgres-backed launch records.
+
+## Progress
+
+- Replaced server-embedded destination mocks with a launch dataset and repository layer.
+- Added `/api/deals` so launch offers come from data instead of a hardcoded React constant.
+- Expanded route generation beyond bus/taxi-only output to include train and flight options.
+- Added destination budget notes that surface in the planner once a trip is priced.
+- Added optional Postgres wiring so launch can move from bundled data to managed records without changing the frontend.
 
 ## Launch Work
 

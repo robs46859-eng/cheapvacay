@@ -17,44 +17,11 @@ import type { ReactNode } from 'react';
 import TripPlanner from './components/planner/TripPlanner';
 import AIAssistant from './components/ai/AIAssistant';
 import { cn } from './lib/utils';
-import { Deal, SavedTrip } from './types';
+import { Deal, Destination, SavedTrip } from './types';
 import { getSavedTrips } from './lib/storage';
 
-const launchDeals: Deal[] = [
-  {
-    id: 'deal-1',
-    title: 'Shoulder Season Hotel Drop',
-    description: 'Save on mountain stays by booking 30 to 45 days before arrival.',
-    code: 'HILLSMART',
-    discountType: 'percentage',
-    value: 12,
-    eligibilityRule: 'Valid for stays outside long weekends and major holiday periods.',
-    expiresAt: 'Rolling',
-  },
-  {
-    id: 'deal-2',
-    title: 'Rail + Guesthouse Budget Combo',
-    description: 'Use sleeper rail for long routes and put savings into better local stays.',
-    code: 'TRAINFIRST',
-    discountType: 'fixed',
-    value: 1500,
-    eligibilityRule: 'Works best on trips longer than 4 nights.',
-    expiresAt: 'Rolling',
-  },
-  {
-    id: 'deal-3',
-    title: 'Group Taxi Split Planner',
-    description: 'Useful when 3 to 4 travelers make direct taxi costs competitive.',
-    code: 'SPLITFARE',
-    discountType: 'fixed',
-    value: 900,
-    eligibilityRule: 'Best for hill stations with poor last-mile connections.',
-    expiresAt: 'Rolling',
-  },
-];
-
 const Home = () => {
-  const [destinations, setDestinations] = useState<any[]>([]);
+  const [destinations, setDestinations] = useState<Destination[]>([]);
 
   useEffect(() => {
     fetch('/api/destinations')
@@ -110,7 +77,7 @@ const Home = () => {
                 <h3 className="text-2xl font-bold">{dest.name}</h3>
                 <div className="flex items-center text-yellow-500 shrink-0">
                   <Star className="w-4 h-4 fill-current" />
-                  <span className="ml-1 text-sm font-bold text-foreground">4.8</span>
+                  <span className="ml-1 text-sm font-bold text-foreground">{dest.planningScore?.toFixed(1) ?? '4.5'}</span>
                 </div>
               </div>
               <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{dest.description}</p>
@@ -214,15 +181,24 @@ const SavedTrips = () => {
 };
 
 const Deals = () => {
+  const [deals, setDeals] = useState<Deal[]>([]);
+
+  useEffect(() => {
+    fetch('/api/deals')
+      .then((res) => res.json())
+      .then((data) => setDeals(data))
+      .catch((error) => console.error('Failed to load deals', error));
+  }, []);
+
   return (
     <div className="p-4 md:p-8 space-y-6 max-w-5xl mx-auto">
       <div className="space-y-2">
         <h2 className="text-3xl font-bold">Launch Offers and Budget Tactics</h2>
-        <p className="text-muted-foreground">These are positioning offers for launch messaging. They are intentionally framed as planning tactics until live supplier integrations exist.</p>
+        <p className="text-muted-foreground">These launch offers are based on the actual destination and route patterns bundled into the planner, not placeholder promo copy.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {launchDeals.map((deal) => (
+        {deals.map((deal) => (
           <div key={deal.id} className="p-6 border-2 border-primary/20 rounded-2xl bg-primary/5 space-y-4 relative overflow-hidden">
             <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl" />
             <div className="space-y-2">

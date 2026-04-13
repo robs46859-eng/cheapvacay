@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Calculator, Bus, Car, Hotel, Utensils, Activity, Info, Save, AlertCircle } from 'lucide-react';
+import { Calculator, Bus, Car, Hotel, Utensils, Activity, Info, Save, AlertCircle, Train, Plane } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { Budget, BudgetLevel, Destination, Route, SavedTrip, Trip } from '@/src/types';
 import { saveTrip } from '@/src/lib/storage';
@@ -180,6 +180,19 @@ export default function TripPlanner() {
     return <div className="p-8 text-center">Select a destination from Home to start planning.</div>;
   }
 
+  const getRouteIcon = (type: Route['type']) => {
+    switch (type) {
+      case 'train':
+        return <Train className="w-5 h-5" />;
+      case 'flight':
+        return <Plane className="w-5 h-5" />;
+      case 'taxi':
+        return <Car className="w-5 h-5" />;
+      default:
+        return <Bus className="w-5 h-5" />;
+    }
+  };
+
   return (
     <div className="max-w-5xl mx-auto p-4 md:p-8 space-y-8">
       <header className="flex flex-col md:flex-row md:items-center gap-4">
@@ -297,7 +310,7 @@ export default function TripPlanner() {
                 >
                   <div className="flex justify-between items-start gap-3">
                     <div className="flex items-center gap-3">
-                      {route.type === 'bus' ? <Bus className="w-5 h-5" /> : <Car className="w-5 h-5" />}
+                      {getRouteIcon(route.type)}
                       <div>
                         <p className="font-semibold capitalize">{route.type} • {route.provider}</p>
                         <p className="text-xs text-muted-foreground">
@@ -341,6 +354,15 @@ export default function TripPlanner() {
               <p className="text-3xl font-bold">₹{Math.round(budget.totalCost).toLocaleString('en-IN')}</p>
             </div>
           </div>
+
+          {destination.budgetHighlights?.length ? (
+            <div className="rounded-2xl border bg-card p-5 space-y-2">
+              <h4 className="font-semibold">Budget notes for {destination.name}</h4>
+              {destination.budgetHighlights.map((tip) => (
+                <p key={tip} className="text-sm text-muted-foreground">{tip}</p>
+              ))}
+            </div>
+          ) : null}
         </section>
       )}
 

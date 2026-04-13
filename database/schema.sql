@@ -9,14 +9,26 @@ CREATE TABLE users (
 
 -- Destinations Table
 CREATE TABLE destinations (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     region VARCHAR(255),
     country VARCHAR(255) DEFAULT 'India',
     base_cost_index DECIMAL(3, 2) DEFAULT 1.0,
     description TEXT,
     avg_hotel_price DECIMAL(10, 2),
-    image_url TEXT
+    image_url TEXT,
+    travel_profile VARCHAR(50),
+    zone VARCHAR(50),
+    nearest_rail_hub VARCHAR(255),
+    nearest_airport VARCHAR(255),
+    best_months TEXT[],
+    avoid_months TEXT[],
+    budget_highlights TEXT[],
+    local_transport_note TEXT,
+    sample_budget_per_day DECIMAL(10, 2),
+    sample_mid_budget_per_day DECIMAL(10, 2),
+    tags TEXT[],
+    planning_score DECIMAL(3, 2) DEFAULT 4.4
 );
 
 -- Trips Table
@@ -88,10 +100,12 @@ CREATE TABLE ratings (
 
 -- Deals Table
 CREATE TABLE deals (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    code VARCHAR(100) NOT NULL,
     discount_type VARCHAR(50), -- 'percentage', 'fixed'
     value DECIMAL(10, 2),
     eligibility_rule TEXT,
-    expires_at TIMESTAMP WITH TIME ZONE
+    expires_at TEXT
 );

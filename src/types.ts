@@ -19,6 +19,18 @@ export interface Destination {
   description: string;
   avgHotelPrice: number;
   imageUrl?: string;
+  planningScore?: number;
+  travelProfile?: string;
+  zone?: string;
+  nearestRailHub?: string;
+  nearestAirport?: string;
+  bestMonths?: string[];
+  avoidMonths?: string[];
+  budgetHighlights?: string[];
+  localTransportNote?: string;
+  sampleBudgetPerDay?: number;
+  sampleMidBudgetPerDay?: number;
+  tags?: string[];
 }
 
 export type BudgetLevel = 'budget' | 'mid' | 'luxury';
@@ -35,7 +47,7 @@ export interface Trip {
   createdAt: string;
 }
 
-export type TransportType = 'bus' | 'taxi';
+export type TransportType = 'bus' | 'taxi' | 'train' | 'flight';
 
 export interface Route {
   id: string;

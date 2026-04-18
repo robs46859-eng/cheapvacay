@@ -1,108 +1,60 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-export interface User {
-  id: string;
-  email: string;
-  loyaltyScore: number;
-  createdAt: string;
-}
-
-export interface Destination {
+export type Destination = {
   id: string;
   name: string;
   region: string;
-  country: string;
-  baseCostIndex: number; // 1.0 is average
-  description: string;
-  avgHotelPrice: number;
-  imageUrl?: string;
-  planningScore?: number;
-  travelProfile?: string;
-  zone?: string;
-  nearestRailHub?: string;
-  nearestAirport?: string;
-  bestMonths?: string[];
-  avoidMonths?: string[];
-  budgetHighlights?: string[];
-  localTransportNote?: string;
-  sampleBudgetPerDay?: number;
-  sampleMidBudgetPerDay?: number;
-  tags?: string[];
-}
+  vibe: string;
+  hero: string;
+  summary: string;
+  bestMonths: string[];
+  averageNightlyStay: number;
+  averageMealBudget: number;
+  localTransitDaily: number;
+  tags: string[];
+  highlights: string[];
+};
 
-export type BudgetLevel = 'budget' | 'mid' | 'luxury';
-
-export interface Trip {
-  id: string;
-  userId: string;
+export type PlannerRequest = {
   origin: string;
   destinationId: string;
-  startDate: string;
-  endDate: string;
-  travelerCount: number;
-  budgetLevel: BudgetLevel;
+  travelers: number;
+  nights: number;
+  budgetProfile: "lean" | "smart" | "comfort";
+  transportPreference: "cheapest" | "balanced" | "fastest";
+};
+
+export type QuoteBreakdown = {
+  label: string;
+  amount: number;
+  notes: string;
+};
+
+export type PlannerQuote = {
+  destination: Destination;
+  request: PlannerRequest;
+  travelMode: string;
+  rationale: string[];
+  breakdown: QuoteBreakdown[];
+  total: number;
+  dailyAverage: number;
+  scorecard: {
+    value: string;
+    comfort: string;
+    complexity: string;
+  };
+};
+
+export type PlannerResponse = {
+  quote: PlannerQuote;
+  advice: string;
+  savedPlan: SavedTripPlan;
+};
+
+export type SavedTripPlan = {
+  id: string;
+  userKey: string;
   createdAt: string;
-}
-
-export type TransportType = 'bus' | 'taxi' | 'train' | 'flight';
-
-export interface Route {
-  id: string;
-  tripId: string;
-  type: TransportType;
-  duration: number; // in minutes
-  estimatedCost: number;
-  provider: string;
-  metadata: any;
-}
-
-export interface Budget {
-  id: string;
-  tripId: string;
-  transportCost: number;
-  hotelCost: number;
-  foodEstimate: number;
-  activitiesCost: number;
-  miscCost: number;
-  buffer: number;
-  totalCost: number;
-}
-
-export interface Rating {
-  id: string;
-  tripId: string;
-  costScore: number;
-  safetyScore: number;
-  comfortScore: number;
-  timeScore: number;
-  reliabilityScore: number;
-}
-
-export interface Deal {
-  id: string;
-  title: string;
-  description: string;
-  code: string;
-  discountType: 'percentage' | 'fixed';
-  value: number;
-  eligibilityRule: string;
-  expiresAt: string;
-}
-
-export interface SavedTrip {
-  id: string;
-  destinationId: string;
-  destinationName: string;
-  origin: string;
-  startDate: string;
-  endDate: string;
-  travelerCount: number;
-  budgetLevel: BudgetLevel;
-  transportLabel: string;
-  totalCost: number;
-  createdAt: string;
-  status: 'draft' | 'ready';
-}
+  updatedAt: string;
+  request: PlannerRequest;
+  quote: PlannerQuote;
+  advice: string;
+};

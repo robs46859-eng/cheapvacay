@@ -1,1 +1,453 @@
-@import "tailwindcss";
+:root {
+  color-scheme: light;
+  font-family: "Inter", "Segoe UI", sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  --bg: #f3efe6;
+  --ink: #182127;
+  --muted: #5f6b73;
+  --card: rgba(255, 252, 246, 0.88);
+  --line: rgba(24, 33, 39, 0.12);
+  --accent: #0f766e;
+  --accent-soft: #d8f3ec;
+  --shadow: 0 20px 60px rgba(22, 30, 35, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: radial-gradient(circle at top left, rgba(15, 118, 110, 0.16), transparent 28%),
+    radial-gradient(circle at top right, rgba(255, 184, 76, 0.2), transparent 24%),
+    var(--bg);
+  color: var(--ink);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+}
+
+.page-shell {
+  position: relative;
+  min-height: 100vh;
+}
+
+.page-backdrop {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.28) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.28) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(circle at center, black, transparent 80%);
+}
+
+.page-content {
+  position: relative;
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0 64px;
+}
+
+.section,
+.hero,
+.planner-form,
+.destination-card,
+.metric-card,
+.advice-card,
+.breakdown-row,
+.hero-card {
+  backdrop-filter: blur(18px);
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.35fr 0.9fr;
+  gap: 24px;
+  align-items: stretch;
+  margin-bottom: 28px;
+}
+
+.hero-copy,
+.hero-card,
+.planner-form,
+.metric-card,
+.advice-card,
+.breakdown-row,
+.destination-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  border-radius: 24px;
+}
+
+.hero-copy {
+  padding: 32px;
+}
+
+.hero-copy h1,
+.section-heading h2 {
+  margin: 10px 0 12px;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
+.hero-copy h1 {
+  font-size: clamp(2.8rem, 6vw, 5.5rem);
+  max-width: 10ch;
+}
+
+.hero-copy p,
+.destination-card p,
+.metric-card p,
+.planner-sidecard p,
+.advice-card p,
+.breakdown-row p {
+  color: var(--muted);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  margin-top: 24px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 20px;
+  border-radius: 14px;
+  font-weight: 700;
+}
+
+.button-primary {
+  background: var(--ink);
+  color: white;
+}
+
+.hero-stat {
+  display: grid;
+  gap: 4px;
+}
+
+.hero-stat strong {
+  font-size: 1rem;
+}
+
+.hero-stat span {
+  max-width: 26ch;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.hero-card {
+  padding: 28px;
+  align-self: end;
+}
+
+.hero-card-label {
+  margin: 0 0 14px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.hero-card ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.section {
+  margin-bottom: 28px;
+}
+
+.section-heading {
+  margin-bottom: 16px;
+}
+
+.section-heading h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.destination-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.saved-plan-list {
+  display: grid;
+  gap: 12px;
+}
+
+.saved-plan-card {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 18px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  text-align: left;
+}
+
+.saved-plan-card strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.saved-plan-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.saved-plan-card span {
+  font-weight: 700;
+}
+
+.saved-plan-card-selected {
+  border-color: rgba(15, 118, 110, 0.4);
+}
+
+.destination-card {
+  padding: 18px;
+  text-align: left;
+  transition: transform 180ms ease, border-color 180ms ease;
+}
+
+.destination-card:hover,
+.destination-card-selected {
+  transform: translateY(-2px);
+  border-color: rgba(15, 118, 110, 0.4);
+}
+
+.destination-card-top {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.destination-card-top span,
+.destination-meta {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.destination-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.planner-shell,
+.results-shell,
+.advice-shell {
+  padding: 4px 0;
+}
+
+.planner-form {
+  padding: 24px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.planner-form label {
+  display: grid;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.planner-form input,
+.planner-form select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: white;
+}
+
+.planner-sidecard {
+  grid-column: span 2;
+  padding: 20px;
+  border-radius: 20px;
+  border: 1px dashed rgba(24, 33, 39, 0.16);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.planner-sidecard strong {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+}
+
+.planner-sidecard-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.planner-sidecard-tags span {
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.08);
+  color: var(--accent);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.planner-submit {
+  grid-column: span 2;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.metric-card {
+  padding: 22px;
+  display: grid;
+  gap: 10px;
+}
+
+.metric-card-primary {
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.95), rgba(12, 94, 88, 0.95));
+  color: white;
+}
+
+.metric-card-primary p {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.metric-card strong {
+  font-size: 1.5rem;
+}
+
+.breakdown-list {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.breakdown-row {
+  padding: 18px 20px;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+}
+
+.breakdown-row span {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.rationale-list {
+  display: grid;
+  gap: 10px;
+  color: var(--muted);
+}
+
+.advice-card {
+  padding: 22px;
+}
+
+.advice-card p {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.error-banner {
+  margin-bottom: 18px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(183, 28, 28, 0.16);
+  background: rgba(255, 235, 238, 0.82);
+  color: #8b1e1e;
+  font-weight: 600;
+}
+
+@media (max-width: 980px) {
+  .hero,
+  .destination-grid,
+  .results-grid,
+  .planner-form {
+    grid-template-columns: 1fr;
+  }
+
+  .planner-sidecard,
+  .planner-submit {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-content {
+    width: min(100% - 20px, 1180px);
+    padding-top: 20px;
+  }
+
+  .hero-copy,
+  .hero-card,
+  .planner-form,
+  .metric-card,
+  .advice-card,
+  .breakdown-row {
+    border-radius: 20px;
+  }
+
+  .hero-copy {
+    padding: 24px;
+  }
+
+  .hero-copy h1 {
+    font-size: 2.6rem;
+  }
+
+  .breakdown-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

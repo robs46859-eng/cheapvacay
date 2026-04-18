@@ -1,14 +1,14 @@
 # Deploy CheapVacay India
 
-## Recommended First Host
+## Recommended first host
 
-Render is the simplest fit for the current stack because the app is one Express server that also serves the Vite build.
+Render is still the cleanest first host because the project is a single Express service that serves both the API and the built Vite client.
 
-## Render Setup
+## Render setup
 
 1. Push the repo to GitHub.
 2. In Render, create a new Web Service from the repo.
-3. Render can read [render.yaml](/Users/joeiton/cheapvacay/render.yaml) automatically, or you can set these manually:
+3. Render can read [render.yaml](/Users/joeiton/Desktop/Rob/AndroidStudioProjects/cheapvacay/render.yaml:1) automatically, or you can set these manually:
 
 - Build command: `npm ci && npm run build`
 - Start command: `npm start`
@@ -17,9 +17,15 @@ Render is the simplest fit for the current stack because the app is one Express 
 4. Add environment variables:
 
 - `NODE_ENV=production`
+- `DATA_DIR=/var/data`
 - `GEMINI_API_KEY=your_real_key`
 
-## Pre-Deploy Check
+5. Attach a persistent disk for the SQLite file:
+
+- Mount path: `/var/data`
+- App database file will be created at `/var/data/cheapvacay.sqlite`
+
+## Pre-deploy check
 
 Run locally first:
 
@@ -29,21 +35,22 @@ npm run build
 npm run dev
 ```
 
-## Post-Deploy Smoke Test
+Then use [DEPLOY_CHECKLIST.md](/Users/joeiton/Desktop/Rob/AndroidStudioProjects/cheapvacay/DEPLOY_CHECKLIST.md:1) as the hard deploy gate.
+
+## Post-deploy smoke test
 
 - Homepage loads and destination cards render
-- Planner loads for at least one destination
-- Route generation works
-- Budget calculation works
-- Saved trip flow works in browser
-- Assistant returns a real response
+- Planner submits for at least one destination
+- Quote breakdown renders
+- Advice panel returns either Gemini output or fallback guidance
+- `/api/health` responds successfully
+- Generate a quote, redeploy or restart the service, and confirm the saved plan still appears
 
-## Immediate Next Improvement
+## Immediate next improvement
 
 Add analytics before public promotion so you can measure:
 
 - homepage visits
 - planner starts
-- route searches
-- trip saves
-- assistant prompts
+- quote generations
+- assistant responses

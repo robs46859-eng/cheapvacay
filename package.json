@@ -8,8 +8,12 @@
     "build": "vite build",
     "start": "NODE_ENV=production tsx server.ts",
     "preview": "vite preview",
+    "local:model": "node scripts/local-model.js",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "env:schema": "node scripts/validate-env.js --schema-only",
+    "env:validate": "node scripts/validate-env.js",
+    "env:sync:render": "node scripts/sync-render-env.js"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

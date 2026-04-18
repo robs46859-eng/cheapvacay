@@ -1,14 +1,15 @@
 # CheapVacay India
 
-CheapVacay India is a launch-focused MVP for budget trip planning across India. Users can browse destinations, compare transport options, estimate end-to-end trip cost, save draft itineraries locally, and ask a server-backed AI assistant for budget-aware travel guidance.
+CheapVacay India is now a clean single-repo web app for budget-first trip planning across India. The codebase was rebuilt around a typed Express API, a simpler React client, and explicit launch-safe quote logic instead of scattered demo logic.
 
-## Current MVP Scope
+## What The Rewrite Does
 
-- Destination discovery for India-focused budget trips
-- Route generation with practical low-cost transport options
-- Full trip estimate including transport, hotel, food, activities, and contingency buffer
-- Saved trip drafts in local storage
-- Gemini-backed assistant behind the server API
+- Curated India destination catalog with explicit cost characteristics
+- Typed planner request -> quote flow with breakdown, rationale, and scorecard
+- Server-backed advice generation with Gemini when configured and safe fallback when it is not
+- Server-side SQLite persistence for saved trip plans
+- Production-ready single service deployment path via Render
+- Cleaner separation between API routes, planning logic, assistant service, and UI
 
 ## Stack
 
@@ -18,32 +19,38 @@ CheapVacay India is a launch-focused MVP for budget trip planning across India. 
 - TypeScript
 - Tailwind CSS 4
 - Gemini via `@google/genai`
-- Postgres-ready data layer via `pg`
+
+## Structure
+
+```text
+server/
+  app.ts
+  config.ts
+  data/destinations.ts
+  domain/planner.ts
+  routes/api.ts
+  services/assistant.ts
+
+src/
+  components/
+  lib/
+  App.tsx
+  main.tsx
+  types.ts
+```
 
 ## Local Setup
 
-### 1. Install dependencies
-
 ```bash
 npm ci
-```
-
-### 2. Create `.env`
-
-```env
-PORT=3000
-GEMINI_API_KEY=your_gemini_api_key
-DATABASE_URL=postgresql://user:password@localhost:5432/cheapvacay
-DATABASE_SSL=false
-```
-
-### 3. Run the app
-
-```bash
 npm run dev
 ```
 
 Open `http://localhost:3000`.
+
+Use `.env.example` as the starting point for local configuration.
+
+Persistence defaults to `./data/cheapvacay.sqlite`. Override with `DATA_DIR` if you want the SQLite file somewhere else.
 
 ## Commands
 
@@ -52,28 +59,19 @@ npm run dev
 npm run lint
 npm run build
 npm start
+npm run local:model -- --prompt "Summarize this repo"
 ```
 
 ## Notes
 
-- The app now ships with a curated launch dataset for destinations, route heuristics, and launch offers.
-- If `DATABASE_URL` is set, the server will read destinations and deals from Postgres and fall back to the bundled launch dataset if the database is unavailable.
-- Saved trips are stored in browser local storage.
-- Firebase files are present, but auth and synced persistence are not part of the current launch slice.
-- Database SQL files now match the launch data model closely enough to support Postgres-backed launch records.
+- Quote logic is intentionally deterministic and launch-safe.
+- The app does not claim live hotel or transport inventory.
+- Recent trip plans are persisted server-side in SQLite instead of browser-only storage.
+- Database and Firebase artifacts are still in the repo, but the running app is currently a single deployable Node service.
+- The local model workflow is documented in [docs/local-model-workflow.md](/Users/joeiton/Desktop/Rob/AndroidStudioProjects/cheapvacay/docs/local-model-workflow.md:1).
 
-## Progress
+## Launch And Deployment
 
-- Replaced server-embedded destination mocks with a launch dataset and repository layer.
-- Added `/api/deals` so launch offers come from data instead of a hardcoded React constant.
-- Expanded route generation beyond bus/taxi-only output to include train and flight options.
-- Added destination budget notes that surface in the planner once a trip is priced.
-- Added optional Postgres wiring so launch can move from bundled data to managed records without changing the frontend.
-
-## Launch Work
-
-See [LAUNCH_CHECKLIST.md](/Users/joeiton/cheapvacay/LAUNCH_CHECKLIST.md) for the recommended first launch sequence.
-
-## Deployment
-
-See [DEPLOY.md](/Users/joeiton/cheapvacay/DEPLOY.md) for the recommended first deployment path.
+- Launch sequence: [LAUNCH_CHECKLIST.md](/Users/joeiton/Desktop/Rob/AndroidStudioProjects/cheapvacay/LAUNCH_CHECKLIST.md:1)
+- Deploy instructions: [DEPLOY.md](/Users/joeiton/Desktop/Rob/AndroidStudioProjects/cheapvacay/DEPLOY.md:1)
+- Deploy gate checklist: [DEPLOY_CHECKLIST.md](/Users/joeiton/Desktop/Rob/AndroidStudioProjects/cheapvacay/DEPLOY_CHECKLIST.md:1)

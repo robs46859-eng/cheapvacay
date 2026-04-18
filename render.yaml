@@ -3,6 +3,10 @@ services:
     name: cheapvacay-india
     runtime: node
     plan: starter
+    disk:
+      name: cheapvacay-data
+      mountPath: /var/data
+      sizeGB: 1
     buildCommand: npm ci && npm run build
     startCommand: npm start
     envVars:
@@ -10,5 +14,7 @@ services:
         value: production
       - key: PORT
         value: 10000
+      - key: DATA_DIR
+        value: /var/data
       - key: GEMINI_API_KEY
         sync: false

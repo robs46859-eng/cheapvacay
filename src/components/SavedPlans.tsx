@@ -13,8 +13,8 @@ export function SavedPlans({ plans, selectedPlanId, onSelect }: SavedPlansProps)
   return (
     <section className="section">
       <div className="section-heading">
-        <span className="eyebrow">Saved plans</span>
-        <h2>Recent quotes now persist on the server.</h2>
+        <span className="eyebrow">Persisted</span>
+        <h2>Recent Trip Plans</h2>
       </div>
       <div className="saved-plan-list">
         {plans.map((plan) => {
@@ -25,17 +25,21 @@ export function SavedPlans({ plans, selectedPlanId, onSelect }: SavedPlansProps)
               key={plan.id}
               onClick={() => onSelect(plan)}
               type="button"
+              style={{
+                backgroundColor: selected ? "var(--md-sys-color-secondary-container)" : "var(--md-sys-color-surface-container-low)",
+                borderColor: selected ? "var(--md-sys-color-primary)" : "var(--md-sys-color-outline-variant)",
+                color: selected ? "var(--md-sys-color-on-secondary-container)" : "var(--md-sys-color-on-surface)",
+              }}
             >
               <div>
-                <strong>
-                  {plan.quote.destination.name} from {plan.request.origin}
+                <strong style={{ fontFamily: "var(--md-sys-typescale-title-large-font)", fontSize: "1.1rem" }}>
+                  {plan.quote.destination.name}
                 </strong>
-                <p>
-                  {plan.request.travelers} traveler{plan.request.travelers > 1 ? "s" : ""} · {plan.request.nights} nights ·{" "}
-                  {plan.request.budgetProfile}
+                <p style={{ color: "inherit", opacity: 0.8, fontSize: "0.875rem", marginTop: "4px" }}>
+                  {plan.request.travelers} pax · {plan.request.nights}n · {plan.request.origin}
                 </p>
               </div>
-              <span>{formatInr(plan.quote.total)}</span>
+              <span style={{ fontWeight: 700, fontSize: "1.1rem" }}>{formatInr(plan.quote.total)}</span>
             </button>
           );
         })}

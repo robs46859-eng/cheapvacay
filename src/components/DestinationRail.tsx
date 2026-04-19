@@ -12,7 +12,7 @@ export function DestinationRail({ destinations, selectedId, onSelect }: Destinat
     <section className="section">
       <div className="section-heading">
         <span className="eyebrow">Destinations</span>
-        <h2>Curated for clean launch behavior</h2>
+        <h2>Curated India Catalog</h2>
       </div>
       <div className="destination-grid">
         {destinations.map((destination) => {
@@ -23,15 +23,23 @@ export function DestinationRail({ destinations, selectedId, onSelect }: Destinat
               type="button"
               className={`destination-card${selected ? " destination-card-selected" : ""}`}
               onClick={() => onSelect(destination.id)}
+              style={{ padding: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}
             >
-              <div className="destination-card-top">
-                <span>{destination.region}</span>
-                <strong>{destination.name}</strong>
-              </div>
-              <p>{destination.hero}</p>
-              <div className="destination-meta">
-                <span>{formatInr(destination.averageNightlyStay)}/night</span>
-                <span>{destination.tags.slice(0, 2).join(" · ")}</span>
+              <img 
+                src={destination.imageUrl} 
+                alt={destination.name} 
+                style={{ width: "100%", height: "140px", objectFit: "crop" }} 
+              />
+              <div style={{ padding: "16px", flex: 1, display: "flex", flexDirection: "column" }}>
+                <div className="destination-card-top">
+                  <span>{destination.region}</span>
+                  <strong>{destination.name}</strong>
+                </div>
+                <p style={{ fontSize: "0.875rem", margin: "8px 0" }}>{destination.hero}</p>
+                <div className="destination-meta" style={{ marginTop: "auto" }}>
+                  <span>{formatInr(destination.averageNightlyStay)}/n</span>
+                  <span>{destination.tags.slice(0, 1).join("")}</span>
+                </div>
               </div>
             </button>
           );

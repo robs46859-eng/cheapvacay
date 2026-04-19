@@ -1,16 +1,44 @@
 :root {
   color-scheme: light;
-  font-family: "Inter", "Segoe UI", sans-serif;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  --bg: #f3efe6;
-  --ink: #182127;
-  --muted: #5f6b73;
-  --card: rgba(255, 252, 246, 0.88);
-  --line: rgba(24, 33, 39, 0.12);
-  --accent: #0f766e;
-  --accent-soft: #d8f3ec;
-  --shadow: 0 20px 60px rgba(22, 30, 35, 0.1);
+
+  /* M3 Typography Scale - Refined for smaller headers */
+  --md-sys-typescale-display-large-font: "Quintessential", cursive;
+  --md-sys-typescale-display-large-size: clamp(2rem, 5vw, 3.5rem);
+  --md-sys-typescale-display-large-weight: 400;
+  
+  --md-sys-typescale-headline-large-font: "Quintessential", cursive;
+  --md-sys-typescale-headline-large-size: clamp(1.5rem, 3vw, 2.2rem);
+  --md-sys-typescale-headline-large-weight: 400;
+
+  --md-sys-typescale-title-large-font: "Quintessential", cursive;
+  --md-sys-typescale-title-large-size: 1.375rem;
+  --md-sys-typescale-title-large-weight: 400;
+
+  --md-sys-typescale-label-large-font: "Inter", sans-serif;
+  --md-sys-typescale-label-large-size: 0.875rem;
+  --md-sys-typescale-label-large-weight: 700;
+
+  /* M3 Shapes */
+  --md-sys-shape-corner-extra-large: 28px;
+  --md-sys-shape-corner-large: 16px;
+  --md-sys-shape-corner-medium: 12px;
+  --md-sys-shape-corner-full: 999px;
+
+  /* Legacy variable mapping to M3 */
+  --bg: var(--md-sys-color-background);
+  --ink: var(--md-sys-color-on-background);
+  --muted: var(--md-sys-color-on-surface-variant);
+  --card: var(--md-sys-color-surface-container-low);
+  --line: var(--md-sys-color-outline-variant);
+  --accent: var(--md-sys-color-primary);
+  --accent-soft: var(--md-sys-color-secondary-container);
+  --shadow: 0 4px 8px 3px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.3);
+
+  /* M3 Surface Container mappings (emulated since the utility only gives core palette) */
+  --md-sys-color-surface-container-low: #f7f2f2; /* Fallback until refined */
 }
 
 * {
@@ -25,21 +53,32 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: radial-gradient(circle at top left, rgba(15, 118, 110, 0.16), transparent 28%),
-    radial-gradient(circle at top right, rgba(255, 184, 76, 0.2), transparent 24%),
-    var(--bg);
-  color: var(--ink);
+  background-color: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-background);
+  font-family: var(--md-sys-typescale-label-large-font);
+}
+
+h1 {
+  font-family: var(--md-sys-typescale-display-large-font);
+  font-size: var(--md-sys-typescale-display-large-size);
+  font-weight: var(--md-sys-typescale-display-large-weight);
+  margin: 0;
+  color: var(--md-sys-color-on-background);
+}
+
+h2 {
+  font-family: var(--md-sys-typescale-headline-large-font);
+  font-size: var(--md-sys-typescale-headline-large-size);
+  font-weight: var(--md-sys-typescale-headline-large-weight);
+  margin: 0;
+  color: var(--md-sys-color-on-background);
 }
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
-}
-
-button {
-  border: 0;
-  cursor: pointer;
 }
 
 .page-shell {
@@ -51,403 +90,144 @@ button {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.28) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.28) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: radial-gradient(circle at center, black, transparent 80%);
+  background-color: var(--md-sys-color-background);
+  transition: background 1s ease-in-out;
+  z-index: -1;
+}
+
+/* Palette A: Sage to Cream */
+.bg-palette-a {
+  background: linear-gradient(135deg, #8FD19E 0%, #C2E7CA 40%, #F5EEB8 100%);
+}
+
+/* Palette B: Aqua/Cyan Wispy */
+.bg-palette-b {
+  background: 
+    radial-gradient(at 0% 0%, #A8F0F5 0%, transparent 70%),
+    radial-gradient(at 100% 30%, #6EE0F5 0%, transparent 70%),
+    radial-gradient(at 50% 100%, #E0F7F9 0%, transparent 70%),
+    #A8F0F5;
+}
+
+/* Palette C: Mixed Watercolor Pastel */
+.bg-palette-c {
+  background: 
+    radial-gradient(at 10% 20%, #7EE3F2 0%, transparent 50%),
+    radial-gradient(at 90% 10%, #9AD4A4 0%, transparent 50%),
+    radial-gradient(at 50% 90%, #F3EDB6 0%, transparent 50%),
+    radial-gradient(at 80% 80%, #A8F0F5 0%, transparent 50%),
+    #F3EDB6;
+}
+
+.section-wrapper {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 32px;
+  border-radius: var(--md-sys-shape-corner-extra-large);
+}
+
+.section-wrapper > .section {
+  margin-bottom: 0;
+  padding: 40px;
 }
 
 .page-content {
   position: relative;
   width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 32px 0 64px;
+  padding: 24px 0 80px;
 }
 
-.section,
-.hero,
-.planner-form,
-.destination-card,
-.metric-card,
-.advice-card,
-.breakdown-row,
-.hero-card {
-  backdrop-filter: blur(18px);
-}
-
-.hero {
-  display: grid;
-  grid-template-columns: 1.35fr 0.9fr;
-  gap: 24px;
-  align-items: stretch;
-  margin-bottom: 28px;
-}
-
+/* Glassmorphism M3 update for readability on gradients */
+.glass-card,
 .hero-copy,
 .hero-card,
 .planner-form,
 .metric-card,
 .advice-card,
 .breakdown-row,
-.destination-card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow);
-  border-radius: 24px;
-}
-
-.hero-copy {
+.destination-card,
+.saved-plan-card {
+  background-color: rgba(255, 255, 255, 0.4) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  border-radius: var(--md-sys-shape-corner-extra-large);
   padding: 32px;
-}
-
-.hero-copy h1,
-.section-heading h2 {
-  margin: 10px 0 12px;
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-}
-
-.hero-copy h1 {
-  font-size: clamp(2.8rem, 6vw, 5.5rem);
-  max-width: 10ch;
-}
-
-.hero-copy p,
-.destination-card p,
-.metric-card p,
-.planner-sidecard p,
-.advice-card p,
-.breakdown-row p {
-  color: var(--muted);
-}
-
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-size: 0.84rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  align-items: center;
-  margin-top: 24px;
-}
-
-.button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 14px 20px;
-  border-radius: 14px;
-  font-weight: 700;
-}
-
-.button-primary {
-  background: var(--ink);
-  color: white;
-}
-
-.hero-stat {
-  display: grid;
-  gap: 4px;
-}
-
-.hero-stat strong {
-  font-size: 1rem;
-}
-
-.hero-stat span {
-  max-width: 26ch;
-  color: var(--muted);
-  font-size: 0.95rem;
+  transition: all 250ms cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 }
 
 .hero-card {
-  padding: 28px;
   align-self: end;
+  background-color: rgba(255, 255, 255, 0.6) !important;
 }
 
-.hero-card-label {
-  margin: 0 0 14px;
-  font-size: 0.84rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.hero-card ul {
-  margin: 0;
-  padding-left: 18px;
-  display: grid;
-  gap: 12px;
-}
-
-.section {
-  margin-bottom: 28px;
-}
-
-.section-heading {
-  margin-bottom: 16px;
-}
-
-.section-heading h2 {
-  font-size: clamp(2rem, 4vw, 3rem);
-}
-
-.destination-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.saved-plan-list {
-  display: grid;
-  gap: 12px;
-}
-
-.saved-plan-card {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: center;
-  padding: 16px 18px;
-  border-radius: 20px;
-  border: 1px solid var(--line);
-  background: var(--card);
-  box-shadow: var(--shadow);
-  text-align: left;
-}
-
-.saved-plan-card strong {
-  display: block;
-  margin-bottom: 4px;
-}
-
-.saved-plan-card p {
-  margin: 0;
-  color: var(--muted);
-}
-
-.saved-plan-card span {
-  font-weight: 700;
-}
-
+.destination-card-selected,
 .saved-plan-card-selected {
-  border-color: rgba(15, 118, 110, 0.4);
-}
-
-.destination-card {
-  padding: 18px;
-  text-align: left;
-  transition: transform 180ms ease, border-color 180ms ease;
-}
-
-.destination-card:hover,
-.destination-card-selected {
-  transform: translateY(-2px);
-  border-color: rgba(15, 118, 110, 0.4);
-}
-
-.destination-card-top {
-  display: grid;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-
-.destination-card-top span,
-.destination-meta {
-  color: var(--muted);
-  font-size: 0.92rem;
-}
-
-.destination-meta {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.planner-shell,
-.results-shell,
-.advice-shell {
-  padding: 4px 0;
-}
-
-.planner-form {
-  padding: 24px;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.planner-form label {
-  display: grid;
-  gap: 8px;
-  font-weight: 600;
-}
-
-.planner-form input,
-.planner-form select {
-  width: 100%;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 14px 16px;
-  background: white;
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  border-color: var(--md-sys-color-primary) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1), inset 0 0 0 1px var(--md-sys-color-primary);
 }
 
 .planner-sidecard {
   grid-column: span 2;
-  padding: 20px;
-  border-radius: 20px;
-  border: 1px dashed rgba(24, 33, 39, 0.16);
-  background: rgba(255, 255, 255, 0.8);
+  background-color: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(8px);
+  color: var(--md-sys-color-on-surface);
+  padding: 24px;
+  border-radius: var(--md-sys-shape-corner-large);
+  border: 1px dashed rgba(0, 0, 0, 0.2);
 }
 
-.planner-sidecard strong {
-  display: block;
-  margin-bottom: 10px;
-  font-size: 1.2rem;
-}
-
-.planner-sidecard-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
+.metric-card-primary {
+  background-color: var(--md-sys-color-primary) !important;
+  color: var(--md-sys-color-on-primary) !important;
+  border: none !important;
 }
 
 .planner-sidecard-tags span {
-  padding: 8px 10px;
-  border-radius: 999px;
-  background: rgba(15, 118, 110, 0.08);
-  color: var(--accent);
-  font-size: 0.88rem;
-  font-weight: 600;
-}
-
-.planner-submit {
-  grid-column: span 2;
+  background-color: var(--md-sys-color-tertiary);
+  color: var(--md-sys-color-on-tertiary);
+  padding: 4px 12px;
+  border-radius: var(--md-sys-shape-corner-full);
+  font-size: 0.75rem;
 }
 
 .results-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin-bottom: 16px;
-}
-
-.metric-card {
-  padding: 22px;
-  display: grid;
-  gap: 10px;
+  gap: 16px;
 }
 
 .metric-card-primary {
-  background: linear-gradient(135deg, rgba(15, 118, 110, 0.95), rgba(12, 94, 88, 0.95));
-  color: white;
-}
-
-.metric-card-primary p {
-  color: rgba(255, 255, 255, 0.82);
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  border: none;
 }
 
 .metric-card strong {
-  font-size: 1.5rem;
-}
-
-.breakdown-list {
-  display: grid;
-  gap: 12px;
-  margin-bottom: 16px;
+  font-family: var(--md-sys-typescale-headline-large-font);
 }
 
 .breakdown-row {
-  padding: 18px 20px;
-  display: flex;
-  justify-content: space-between;
-  gap: 18px;
-  align-items: center;
-}
-
-.breakdown-row span {
-  font-size: 1.05rem;
-  font-weight: 700;
-}
-
-.rationale-list {
-  display: grid;
-  gap: 10px;
-  color: var(--muted);
-}
-
-.advice-card {
-  padding: 22px;
-}
-
-.advice-card p {
-  margin: 0;
-  font-size: 1.05rem;
+  padding: 16px 24px;
+  border-radius: var(--md-sys-shape-corner-large);
 }
 
 .error-banner {
-  margin-bottom: 18px;
-  padding: 14px 18px;
-  border-radius: 16px;
-  border: 1px solid rgba(183, 28, 28, 0.16);
-  background: rgba(255, 235, 238, 0.82);
-  color: #8b1e1e;
-  font-weight: 600;
+  background-color: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+  padding: 16px 24px;
+  border-radius: var(--md-sys-shape-corner-large);
+  margin-bottom: 24px;
 }
 
 @media (max-width: 980px) {
-  .hero,
-  .destination-grid,
-  .results-grid,
-  .planner-form {
+  .hero, .results-grid, .planner-form {
     grid-template-columns: 1fr;
   }
-
-  .planner-sidecard,
-  .planner-submit {
+  .planner-sidecard, .planner-submit {
     grid-column: span 1;
-  }
-}
-
-@media (max-width: 640px) {
-  .page-content {
-    width: min(100% - 20px, 1180px);
-    padding-top: 20px;
-  }
-
-  .hero-copy,
-  .hero-card,
-  .planner-form,
-  .metric-card,
-  .advice-card,
-  .breakdown-row {
-    border-radius: 20px;
-  }
-
-  .hero-copy {
-    padding: 24px;
-  }
-
-  .hero-copy h1 {
-    font-size: 2.6rem;
-  }
-
-  .breakdown-row {
-    flex-direction: column;
-    align-items: flex-start;
   }
 }

@@ -9,12 +9,14 @@ type PlannerFormProps = {
 };
 
 export function PlannerForm({ destinations, initialDestinationId, onSubmit, loading }: PlannerFormProps) {
-  const [origin, setOrigin] = useState("Delhi");
+  const [origin, setOrigin] = useState("DEL");
   const [destinationId, setDestinationId] = useState(initialDestinationId);
+  const [travelDate, setTravelDate] = useState(new Date().toISOString().split("T")[0]);
   const [travelers, setTravelers] = useState(2);
   const [nights, setNights] = useState(3);
   const [budgetProfile, setBudgetProfile] = useState<PlannerRequest["budgetProfile"]>("smart");
   const [transportPreference, setTransportPreference] = useState<PlannerRequest["transportPreference"]>("balanced");
+  const [stayType, setStayType] = useState<PlannerRequest["stayType"]>("homestay");
 
   const destination = useMemo(
     () => destinations.find((entry) => entry.id === destinationId) ?? destinations[0],
@@ -29,7 +31,7 @@ export function PlannerForm({ destinations, initialDestinationId, onSubmit, load
     <section className="section planner-shell" id="planner">
       <div className="section-heading">
         <span className="eyebrow">Planner</span>
-        <h2>Generate a quote that exposes the real pressure points.</h2>
+        <h2>Build your budget</h2>
       </div>
       <form
         className="planner-form"
@@ -38,16 +40,25 @@ export function PlannerForm({ destinations, initialDestinationId, onSubmit, load
           await onSubmit({
             origin,
             destinationId,
+            travelDate,
             travelers,
             nights,
             budgetProfile,
             transportPreference,
+            stayType,
           });
         }}
       >
         <label>
-          Origin city
-          <input value={origin} onChange={(event) => setOrigin(event.target.value)} placeholder="Delhi" />
+          Origin city (IATA)
+          <select value={origin} onChange={(event) => setOrigin(event.target.value)}>
+            <option value="DEL">Delhi (DEL)</option>
+            <option value="BOM">Mumbai (BOM)</option>
+            <option value="BLR">Bangalore (BLR)</option>
+            <option value="MAA">Chennai (MAA)</option>
+            <option value="CCU">Kolkata (CCU)</option>
+            <option value="HYD">Hyderabad (HYD)</option>
+          </select>
         </label>
         <label>
           Destination
@@ -59,26 +70,32 @@ export function PlannerForm({ destinations, initialDestinationId, onSubmit, load
             ))}
           </select>
         </label>
-        <label>
-          Travelers
-          <input
-            type="number"
-            min={1}
-            max={8}
-            value={travelers}
-            onChange={(event) => setTravelers(Number(event.target.value))}
-          />
+        <label style={{ gridColumn: "span 2" }}>
+          Travel date
+          <input type="date" value={travelDate} onChange={(event) => setTravelDate(event.target.value)} min={new Date().toISOString().split("T")[0]} />
         </label>
-        <label>
-          Nights
-          <input
-            type="number"
-            min={1}
-            max={21}
-            value={nights}
-            onChange={(event) => setNights(Number(event.target.value))}
-          />
-        </label>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", gridColumn: "span 2" }}>
+          <label>
+            Travelers
+            <input
+              type="number"
+              min={1}
+              max={8}
+              value={travelers}
+              onChange={(event) => setTravelers(Number(event.target.value))}
+            />
+          </label>
+          <label>
+            Nights
+            <input
+              type="number"
+              min={1}
+              max={21}
+              value={nights}
+              onChange={(event) => setNights(Number(event.target.value))}
+            />
+          </label>
+        </div>
         <label>
           Budget profile
           <select value={budgetProfile} onChange={(event) => setBudgetProfile(event.target.value as PlannerRequest["budgetProfile"])}>
@@ -88,6 +105,14 @@ export function PlannerForm({ destinations, initialDestinationId, onSubmit, load
           </select>
         </label>
         <label>
+          Stay type
+          <select value={stayType} onChange={(event) => setStayType(event.target.value as PlannerRequest["stayType"])}>
+            <option value="hostel">Hostel</option>
+            <option value="homestay">Homestay</option>
+            <option value="boutique">Boutique</option>
+          </select>
+        </label>
+        <label style={{ gridColumn: "span 2" }}>
           Transport bias
           <select
             value={transportPreference}
@@ -99,13 +124,22 @@ export function PlannerForm({ destinations, initialDestinationId, onSubmit, load
           </select>
         </label>
 
-        <aside className="planner-sidecard">
-          <strong>{destination?.name}</strong>
-          <p>{destination?.summary}</p>
-          <div className="planner-sidecard-tags">
-            {destination?.highlights.map((highlight) => (
-              <span key={highlight}>{highlight}</span>
-            ))}
+        <aside className="planner-sidecard" style={{ padding: 0, overflow: "hidden" }}>
+          {destination?.imageUrl && (
+            <img 
+              src={destination.imageUrl} 
+              alt={destination.name} 
+              style={{ width: "100%", height: "200px", objectFit: "cover" }} 
+            />
+          )}
+          <div style={{ padding: "24px" }}>
+            <strong style={{ fontSize: "1.5rem" }}>{destination?.name}</strong>
+            <p style={{ marginTop: "8px", fontSize: "1rem" }}>{destination?.summary}</p>
+            <div className="planner-sidecard-tags" style={{ marginTop: "16px" }}>
+              {destination?.highlights.map((highlight) => (
+                <span key={highlight}>{highlight}</span>
+              ))}
+            </div>
           </div>
         </aside>
 

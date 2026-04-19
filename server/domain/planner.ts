@@ -2,14 +2,17 @@ import { destinations, type DestinationRecord } from "../data/destinations.ts";
 
 export type BudgetProfile = "lean" | "smart" | "comfort";
 export type TransportPreference = "cheapest" | "balanced" | "fastest";
+export type StayType = "hostel" | "homestay" | "boutique";
 
 export type PlannerRequest = {
   origin: string;
   destinationId: string;
+  travelDate: string;
   travelers: number;
   nights: number;
   budgetProfile: BudgetProfile;
   transportPreference: TransportPreference;
+  stayType: StayType;
 };
 
 export type QuoteBreakdown = {
@@ -31,6 +34,7 @@ export type PlannerQuote = {
     comfort: string;
     complexity: string;
   };
+  isLiveData?: boolean;
 };
 
 const budgetMultipliers: Record<BudgetProfile, number> = {
@@ -45,6 +49,12 @@ const transportMultipliers: Record<TransportPreference, number> = {
   fastest: 1.35,
 };
 
+const stayMultipliers: Record<StayType, number> = {
+  hostel: 0.65,
+  homestay: 0.9,
+  boutique: 1.45,
+};
+
 function clampWholeNumber(value: unknown, fallback: number, min: number, max: number) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return fallback;
@@ -53,10 +63,12 @@ function clampWholeNumber(value: unknown, fallback: number, min: number, max: nu
 
 export function parsePlannerRequest(payload: unknown): PlannerRequest {
   const body = typeof payload === "object" && payload !== null ? payload as Record<string, unknown> : {};
-  const origin = String(body.origin ?? "").trim();
+  const origin = String(body.origin ?? "DEL").trim().toUpperCase();
   const destinationId = String(body.destinationId ?? "").trim();
+  const travelDate = String(body.travelDate ?? new Date().toISOString().split("T")[0]).trim();
   const budgetProfile = String(body.budgetProfile ?? "smart") as BudgetProfile;
   const transportPreference = String(body.transportPreference ?? "balanced") as TransportPreference;
+  const stayType = String(body.stayType ?? "homestay") as StayType;
   const travelers = clampWholeNumber(body.travelers, 2, 1, 8);
   const nights = clampWholeNumber(body.nights, 3, 1, 21);
 
@@ -76,13 +88,19 @@ export function parsePlannerRequest(payload: unknown): PlannerRequest {
     throw new Error("Transport preference is invalid.");
   }
 
+  if (!["hostel", "homestay", "boutique"].includes(stayType)) {
+    throw new Error("Stay type is invalid.");
+  }
+
   return {
     origin,
     destinationId,
+    travelDate,
     travelers,
     nights,
     budgetProfile,
     transportPreference,
+    stayType,
   };
 }
 
@@ -90,7 +108,12 @@ export function listDestinations() {
   return destinations;
 }
 
-export function buildQuote(request: PlannerRequest): PlannerQuote {
+export type LiveDataValues = {
+  flightPrice?: number | null;
+  hotelPricePerNight?: number | null;
+};
+
+export function buildQuote(request: PlannerRequest, liveData: LiveDataValues = {}): PlannerQuote {
   const destination = destinations.find((entry) => entry.id === request.destinationId);
   if (!destination) {
     throw new Error("Destination not found.");
@@ -98,17 +121,29 @@ export function buildQuote(request: PlannerRequest): PlannerQuote {
 
   const budgetMultiplier = budgetMultipliers[request.budgetProfile];
   const transportMultiplier = transportMultipliers[request.transportPreference];
+  const stayMultiplier = stayMultipliers[request.stayType];
   const roomCount = Math.max(1, Math.ceil(request.travelers / 2));
 
+  // Use live data if available, else fall back to model
   const intercityBase = 1200 + destination.averageNightlyStay * 0.25;
-  const intercityTravel = Math.round(intercityBase * request.travelers * transportMultiplier);
-  const stay = Math.round(destination.averageNightlyStay * roomCount * request.nights * budgetMultiplier);
+  const modeledIntercity = Math.round(intercityBase * request.travelers * transportMultiplier);
+  const intercityTravel = liveData.flightPrice 
+    ? liveData.flightPrice * request.travelers 
+    : modeledIntercity;
+
+  const modeledStay = Math.round(destination.averageNightlyStay * roomCount * request.nights * budgetMultiplier * stayMultiplier);
+  const stay = liveData.hotelPricePerNight 
+    ? Math.round(liveData.hotelPricePerNight * roomCount * request.nights) 
+    : modeledStay;
+
   const food = Math.round(destination.averageMealBudget * request.travelers * request.nights * budgetMultiplier);
   const local = Math.round(destination.localTransitDaily * request.nights * transportMultiplier);
   const activities = Math.round((destination.averageNightlyStay * 0.42) * request.nights * budgetMultiplier);
   const contingency = Math.round((intercityTravel + stay + food + local + activities) * 0.12);
 
   const total = intercityTravel + stay + food + local + activities + contingency;
+
+  const isLiveData = !!(liveData.flightPrice || liveData.hotelPricePerNight);
 
   const travelMode = request.transportPreference === "fastest"
     ? "Flight first, local cab/rideshare support"
@@ -120,14 +155,23 @@ export function buildQuote(request: PlannerRequest): PlannerQuote {
     destination,
     request,
     travelMode,
+    isLiveData,
     rationale: [
-      `${destination.name} fits a ${request.nights}-night trip without forcing a multi-city plan.`,
-      `${request.transportPreference === "cheapest" ? "Travel cost is kept down by biasing toward ground transport." : "Travel cost balances convenience and spend."}`,
+      `${destination.name} fits a ${request.nights}-night trip using ${request.stayType} lodging.`,
+      isLiveData ? "Real-time pricing data integrated for flights and stays." : "Estimated costs based on regional budget benchmarks.",
       `${request.budgetProfile === "lean" ? "Spend is constrained aggressively, so activities and stay quality are trimmed first." : "Budget leaves room for a cleaner stay and small experience buffer."}`,
     ],
     breakdown: [
-      { label: "Intercity travel", amount: intercityTravel, notes: `${travelMode}.` },
-      { label: "Stay", amount: stay, notes: `${roomCount} room${roomCount > 1 ? "s" : ""} for ${request.nights} nights.` },
+      { 
+        label: "Intercity travel", 
+        amount: intercityTravel, 
+        notes: liveData.flightPrice ? `Live flight fare: ${liveData.flightPrice}/person.` : `${travelMode}.` 
+      },
+      { 
+        label: "Stay", 
+        amount: stay, 
+        notes: liveData.hotelPricePerNight ? `Live stay rate: ${liveData.hotelPricePerNight}/night for ${roomCount} room(s).` : `${roomCount} room${roomCount > 1 ? "s" : ""} in a ${request.stayType}.` 
+      },
       { label: "Food", amount: food, notes: "Daily meal budget matched to destination price level." },
       { label: "Local movement", amount: local, notes: "Station, airport, and local in-city movement." },
       { label: "Activities", amount: activities, notes: "Low-friction attraction budget, not luxury tours." },
@@ -137,7 +181,7 @@ export function buildQuote(request: PlannerRequest): PlannerQuote {
     dailyAverage: Math.round(total / Math.max(1, request.nights)),
     scorecard: {
       value: request.budgetProfile === "lean" ? "High if dates stay flexible" : "Balanced value",
-      comfort: request.budgetProfile === "comfort" ? "Above baseline comfort" : "Efficient, not indulgent",
+      comfort: request.stayType === "boutique" ? "Elevated boutique comfort" : request.budgetProfile === "comfort" ? "Above baseline comfort" : "Efficient, not indulgent",
       complexity: request.transportPreference === "cheapest" ? "Moderate" : "Low to moderate",
     },
   };

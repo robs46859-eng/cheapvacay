@@ -64,22 +64,33 @@ function App() {
     <div className="page-shell">
       <div className="page-backdrop" />
       <main className="page-content">
-        <Hero onJumpToPlanner={() => plannerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })} />
+        <div className="section-wrapper bg-palette-a">
+          <Hero onJumpToPlanner={() => plannerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })} />
+          <DestinationRail destinations={destinations} selectedId={selectedId} onSelect={setSelectedId} />
+        </div>
+
+        <div className="section-wrapper bg-palette-b">
+          <SavedPlans plans={savedPlans} selectedPlanId={selectedPlanId} onSelect={hydratePlan} />
+          <section ref={plannerRef}>
+            {destinations.length > 0 ? (
+              <PlannerForm
+                destinations={destinations}
+                initialDestinationId={selectedDestination}
+                onSubmit={handleQuote}
+                loading={loading}
+              />
+            ) : null}
+          </section>
+        </div>
+
+        {quote ? (
+          <div className="section-wrapper bg-palette-c">
+            <QuoteCard quote={quote} />
+            {advice ? <AdvicePanel advice={advice} /> : null}
+          </div>
+        ) : null}
+
         {error ? <div className="error-banner">{error}</div> : null}
-        <DestinationRail destinations={destinations} selectedId={selectedId} onSelect={setSelectedId} />
-        <SavedPlans plans={savedPlans} selectedPlanId={selectedPlanId} onSelect={hydratePlan} />
-        <section ref={plannerRef}>
-          {destinations.length > 0 ? (
-            <PlannerForm
-              destinations={destinations}
-              initialDestinationId={selectedDestination}
-              onSubmit={handleQuote}
-              loading={loading}
-            />
-          ) : null}
-        </section>
-        {quote ? <QuoteCard quote={quote} /> : null}
-        {advice ? <AdvicePanel advice={advice} /> : null}
       </main>
     </div>
   );

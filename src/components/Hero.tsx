@@ -7,10 +7,10 @@ export function Hero({ onJumpToPlanner }: HeroProps) {
     <section className="hero">
       <div className="hero-copy">
         <span className="eyebrow">CheapVacay India</span>
-        <h1>Budget trip planning that behaves like an operator, not a brochure.</h1>
-        <p>
+        <h1>Budget trip planning that behaves like an operator.</h1>
+        <p style={{ color: "var(--md-sys-color-on-surface-variant)", marginTop: "16px", fontSize: "1.125rem" }}>
           Pick a destination, choose how hard you want to push on cost, and get a trip budget
-          that is explicit about tradeoffs instead of hiding them behind fake live fares.
+          that is explicit about tradeoffs.
         </p>
         <div className="hero-actions">
           <button className="button button-primary" onClick={onJumpToPlanner}>
@@ -27,7 +27,7 @@ export function Hero({ onJumpToPlanner }: HeroProps) {
         <ul>
           <li>Single clear quote endpoint</li>
           <li>Destination-first budget modeling</li>
-          <li>AI guidance with safe fallback when Gemini is absent</li>
+          <li>AI guidance with safe fallback</li>
         </ul>
       </div>
     </section>

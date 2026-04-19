@@ -4,6 +4,7 @@ export type Destination = {
   region: string;
   vibe: string;
   hero: string;
+  imageUrl: string;
   summary: string;
   bestMonths: string[];
   averageNightlyStay: number;
@@ -16,10 +17,12 @@ export type Destination = {
 export type PlannerRequest = {
   origin: string;
   destinationId: string;
+  travelDate: string;
   travelers: number;
   nights: number;
   budgetProfile: "lean" | "smart" | "comfort";
   transportPreference: "cheapest" | "balanced" | "fastest";
+  stayType: "hostel" | "homestay" | "boutique";
 };
 
 export type QuoteBreakdown = {

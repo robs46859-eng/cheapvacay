@@ -23,6 +23,8 @@ database.exec(`
     nights INTEGER NOT NULL,
     budget_profile TEXT NOT NULL,
     transport_preference TEXT NOT NULL,
+    stay_type TEXT NOT NULL DEFAULT 'homestay',
+    travel_date TEXT NOT NULL DEFAULT '',
     travel_mode TEXT NOT NULL,
     total INTEGER NOT NULL,
     daily_average INTEGER NOT NULL,
@@ -44,6 +46,20 @@ if (!columns.some((column) => column.name === "user_key")) {
   database.exec(`
     ALTER TABLE trip_plans
     ADD COLUMN user_key TEXT;
+  `);
+}
+
+if (!columns.some((column) => column.name === "stay_type")) {
+  database.exec(`
+    ALTER TABLE trip_plans
+    ADD COLUMN stay_type TEXT NOT NULL DEFAULT 'homestay';
+  `);
+}
+
+if (!columns.some((column) => column.name === "travel_date")) {
+  database.exec(`
+    ALTER TABLE trip_plans
+    ADD COLUMN travel_date TEXT NOT NULL DEFAULT '';
   `);
 }
 

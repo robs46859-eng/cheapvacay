@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { buildQuote, listDestinations, parsePlannerRequest } from "../domain/planner.ts";
+import { buildQuote, listDestinations, parsePlannerRequest, type LiveDataValues } from "../domain/planner.ts";
 import { generateTripAdvice } from "../services/assistant.ts";
 import { findTripPlanById, listRecentTripPlans, saveTripPlan } from "../persistence/tripPlans.ts";
 import { getDatabasePath } from "../persistence/database.ts";
+import { getFlightPrice, getHotelPrice } from "../services/amadeus.ts";
 
 export function createApiRouter() {
   const router = Router();
@@ -48,11 +49,28 @@ export function createApiRouter() {
       }
 
       const request = parsePlannerRequest(req.body);
-      const quote = buildQuote(request);
+      const destinations = listDestinations();
+      const dest = destinations.find(d => d.id === request.destinationId);
+
+      const liveData: LiveDataValues = {};
+      
+      if (dest) {
+        // Fetch live data in parallel
+        const [flightPrice, hotelPrice] = await Promise.all([
+          getFlightPrice(request.origin, dest.iataCode, request.travelDate, request.travelers),
+          getHotelPrice(dest.iataCode, request.travelers)
+        ]);
+        
+        liveData.flightPrice = flightPrice;
+        liveData.hotelPricePerNight = hotelPrice;
+      }
+
+      const quote = buildQuote(request, liveData);
       const advice = await generateTripAdvice(quote);
       const savedPlan = saveTripPlan(userKey, request, quote, advice);
       res.json({ quote, advice, savedPlan });
     } catch (error) {
+      console.error("Planner quote error:", error);
       const message = error instanceof Error ? error.message : "Invalid request.";
       res.status(400).json({ error: message });
     }

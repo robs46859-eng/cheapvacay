@@ -22,6 +22,8 @@ type TripPlanRow = {
   nights: number;
   budget_profile: PlannerRequest["budgetProfile"];
   transport_preference: PlannerRequest["transportPreference"];
+  stay_type: PlannerRequest["stayType"];
+  travel_date: string;
   travel_mode: string;
   total: number;
   daily_average: number;
@@ -42,6 +44,8 @@ const insertPlan = getDatabase().prepare(`
     nights,
     budget_profile,
     transport_preference,
+    stay_type,
+    travel_date,
     travel_mode,
     total,
     daily_average,
@@ -59,6 +63,8 @@ const insertPlan = getDatabase().prepare(`
     :nights,
     :budget_profile,
     :transport_preference,
+    :stay_type,
+    :travel_date,
     :travel_mode,
     :total,
     :daily_average,
@@ -97,6 +103,8 @@ export function saveTripPlan(userKey: string, request: PlannerRequest, quote: Pl
     nights: request.nights,
     budget_profile: request.budgetProfile,
     transport_preference: request.transportPreference,
+    stay_type: request.stayType,
+    travel_date: request.travelDate,
     travel_mode: quote.travelMode,
     total: quote.total,
     daily_average: quote.dailyAverage,
@@ -137,10 +145,12 @@ function mapTripPlanRow(row: TripPlanRow): SavedTripPlan {
     request: {
       origin: row.origin,
       destinationId: row.destination_id,
+      travelDate: row.travel_date ?? "",
       travelers: row.travelers,
       nights: row.nights,
       budgetProfile: row.budget_profile,
       transportPreference: row.transport_preference,
+      stayType: row.stay_type ?? "homestay",
     },
     quote,
     advice: row.advice,

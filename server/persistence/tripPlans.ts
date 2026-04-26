@@ -1,10 +1,10 @@
 import crypto from "node:crypto";
-import { getDatabase } from "./database.ts";
+import { getFirestore } from "firebase-admin/firestore";
 import type { PlannerQuote, PlannerRequest } from "../domain/planner.ts";
 
 export type SavedTripPlan = {
   id: string;
-  userKey: string;
+  userId: string;
   createdAt: string;
   updatedAt: string;
   request: PlannerRequest;
@@ -12,147 +12,59 @@ export type SavedTripPlan = {
   advice: string;
 };
 
-type TripPlanRow = {
-  id: string;
-  user_key: string | null;
-  origin: string;
-  destination_id: string;
-  destination_name: string;
-  travelers: number;
-  nights: number;
-  budget_profile: PlannerRequest["budgetProfile"];
-  transport_preference: PlannerRequest["transportPreference"];
-  stay_type: PlannerRequest["stayType"];
-  travel_date: string;
-  travel_mode: string;
-  total: number;
-  daily_average: number;
-  advice: string;
-  quote_json: string;
-  created_at: string;
-  updated_at: string;
-};
+function stripUndefined<T>(value: T): T {
+  if (value === null || typeof value !== "object") {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => stripUndefined(item)) as T;
+  }
+  const out: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(value as object)) {
+    if (val !== undefined) {
+      out[key] = stripUndefined(val);
+    }
+  }
+  return out as T;
+}
 
-const insertPlan = getDatabase().prepare(`
-  INSERT INTO trip_plans (
-    id,
-    user_key,
-    origin,
-    destination_id,
-    destination_name,
-    travelers,
-    nights,
-    budget_profile,
-    transport_preference,
-    stay_type,
-    travel_date,
-    travel_mode,
-    total,
-    daily_average,
-    advice,
-    quote_json,
-    created_at,
-    updated_at
-  ) VALUES (
-    :id,
-    :user_key,
-    :origin,
-    :destination_id,
-    :destination_name,
-    :travelers,
-    :nights,
-    :budget_profile,
-    :transport_preference,
-    :stay_type,
-    :travel_date,
-    :travel_mode,
-    :total,
-    :daily_average,
-    :advice,
-    :quote_json,
-    :created_at,
-    :updated_at
-  )
-`);
+function plansCollection(userId: string) {
+  return getFirestore().collection("users").doc(userId).collection("tripPlans");
+}
 
-const listPlans = getDatabase().prepare(`
-  SELECT *
-  FROM trip_plans
-  WHERE user_key = ?
-  ORDER BY created_at DESC
-  LIMIT ?
-`);
-
-const getPlan = getDatabase().prepare(`
-  SELECT *
-  FROM trip_plans
-  WHERE id = ?
-    AND user_key = ?
-`);
-
-export function saveTripPlan(userKey: string, request: PlannerRequest, quote: PlannerQuote, advice: string): SavedTripPlan {
+export async function saveTripPlan(
+  userId: string,
+  request: PlannerRequest,
+  quote: PlannerQuote,
+  advice: string,
+): Promise<SavedTripPlan> {
   const now = new Date().toISOString();
   const id = crypto.randomUUID();
-  insertPlan.run({
+  const plan: SavedTripPlan = {
     id,
-    user_key: userKey,
-    origin: request.origin,
-    destination_id: request.destinationId,
-    destination_name: quote.destination.name,
-    travelers: request.travelers,
-    nights: request.nights,
-    budget_profile: request.budgetProfile,
-    transport_preference: request.transportPreference,
-    stay_type: request.stayType,
-    travel_date: request.travelDate,
-    travel_mode: quote.travelMode,
-    total: quote.total,
-    daily_average: quote.dailyAverage,
-    advice,
-    quote_json: JSON.stringify(quote),
-    created_at: now,
-    updated_at: now,
-  });
-
-  return {
-    id,
-    userKey,
+    userId,
     createdAt: now,
     updatedAt: now,
     request,
     quote,
     advice,
   };
+  const payload = stripUndefined({
+    ...plan,
+  });
+  await plansCollection(userId).doc(id).set(payload);
+  return plan;
 }
 
-export function listRecentTripPlans(userKey: string, limit = 8): SavedTripPlan[] {
-  const rows = listPlans.all(userKey, Math.max(1, Math.min(limit, 25))) as TripPlanRow[];
-  return rows.map(mapTripPlanRow);
+export async function listRecentTripPlans(userId: string, limit = 8): Promise<SavedTripPlan[]> {
+  const cap = Math.max(1, Math.min(limit, 25));
+  const snap = await plansCollection(userId).orderBy("createdAt", "desc").limit(cap).get();
+  return snap.docs.map((doc) => doc.data() as SavedTripPlan);
 }
 
-export function findTripPlanById(id: string, userKey: string): SavedTripPlan | null {
-  const row = getPlan.get(id, userKey) as TripPlanRow | undefined;
-  return row ? mapTripPlanRow(row) : null;
-}
-
-function mapTripPlanRow(row: TripPlanRow): SavedTripPlan {
-  const quote = JSON.parse(row.quote_json) as PlannerQuote;
-  return {
-    id: row.id,
-    userKey: row.user_key ?? "legacy-anonymous",
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-    request: {
-      origin: row.origin,
-      destinationId: row.destination_id,
-      travelDate: row.travel_date ?? "",
-      travelers: row.travelers,
-      nights: row.nights,
-      budgetProfile: row.budget_profile,
-      transportPreference: row.transport_preference,
-      stayType: row.stay_type ?? "homestay",
-    },
-    quote,
-    advice: row.advice,
-  };
+export async function findTripPlanById(id: string, userId: string): Promise<SavedTripPlan | null> {
+  const ref = plansCollection(userId).doc(id);
+  const doc = await ref.get();
+  if (!doc.exists) return null;
+  return doc.data() as SavedTripPlan;
 }

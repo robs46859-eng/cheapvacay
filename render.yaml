@@ -1,12 +1,10 @@
+# Blueprint: non-secret defaults are committed. All `sync: false` keys must be set in the
+# Render dashboard (or via API) — never commit real values. App reads `GEMINI_API_KEY` (not GEMINIAPIKEY).
 services:
   - type: web
     name: cheapvacay-india
     runtime: node
     plan: starter
-    disk:
-      name: cheapvacay-data
-      mountPath: /var/data
-      sizeGB: 1
     buildCommand: npm ci && npm run build
     startCommand: npm start
     envVars:
@@ -14,7 +12,37 @@ services:
         value: production
       - key: PORT
         value: 10000
-      - key: DATA_DIR
-        value: /var/data
+      - key: LOG_LEVEL
+        value: info
+      # General API rate limit (per IP); see server/config.ts for defaults
+      - key: API_RATE_LIMIT_MAX
+        value: "400"
+      - key: API_RATE_LIMIT_WINDOW_MS
+        value: "900000"
+      # Stricter limit for POST /api/planner/quote
+      - key: QUOTE_RATE_LIMIT_MAX
+        value: "40"
+      - key: QUOTE_RATE_LIMIT_WINDOW_MS
+        value: "3600000"
       - key: GEMINI_API_KEY
         sync: false
+      - key: AMADEUS_CLIENT_ID
+        sync: false
+      - key: AMADEUS_CLIENT_SECRET
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false
+      - key: VITE_FIREBASE_API_KEY
+        sync: false
+      - key: VITE_FIREBASE_AUTH_DOMAIN
+        sync: false
+      - key: VITE_FIREBASE_PROJECT_ID
+        sync: false
+      - key: VITE_FIREBASE_APP_ID
+        sync: false
+      - key: VITE_APPCHECK_RECAPTCHA_SITE_KEY
+        sync: false
+      - key: APPCHECK_ENFORCE
+        value: "true"

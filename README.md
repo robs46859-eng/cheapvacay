@@ -7,7 +7,8 @@ CheapVacay India is now a clean single-repo web app for budget-first trip planni
 - Curated India destination catalog with explicit cost characteristics
 - Typed planner request -> quote flow with breakdown, rationale, and scorecard
 - Server-backed advice generation with Gemini when configured and safe fallback when it is not
-- Server-side SQLite persistence for saved trip plans
+- **Google sign-in (Firebase Auth)** and **saved trip plans in Cloud Firestore** (server-side, verified with Firebase Admin)
+- **Firebase App Check** (reCAPTCHA v3) on the web client, verified on every API route except `GET /api/health`; **ID token checks use revocation** (`verifyIdToken(..., true)`)
 - Production-ready single service deployment path via Render
 - Cleaner separation between API routes, planning logic, assistant service, and UI
 
@@ -19,6 +20,7 @@ CheapVacay India is now a clean single-repo web app for budget-first trip planni
 - TypeScript
 - Tailwind CSS 4
 - Gemini via `@google/genai`
+- Firebase (Auth + Firestore) on Google Cloud
 
 ## Structure
 
@@ -30,6 +32,10 @@ server/
   domain/planner.ts
   routes/api.ts
   services/assistant.ts
+  persistence/tripPlans.ts
+  lib/firebase-admin.ts
+  auth/bearer.ts
+  auth/appCheck.ts
 
 src/
   components/
@@ -48,9 +54,7 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-Use `.env.example` as the starting point for local configuration.
-
-Persistence defaults to `./data/cheapvacay.sqlite`. Override with `DATA_DIR` if you want the SQLite file somewhere else.
+Use `.env.example` as the starting point. You need a Firebase project with **Authentication** (Google), **Firestore**, and **App Check** (reCAPTCHA v3 provider for the web app). Set the `VITE_*` and `VITE_APPCHECK_RECAPTCHA_SITE_KEY` in `.env` for the client build, and a **service account** JSON for the server (`FIREBASE_SERVICE_ACCOUNT` or `GOOGLE_APPLICATION_CREDENTIALS`). In development, App Check enforcement is **off** by default unless `APPCHECK_ENFORCE=true`.
 
 ## Commands
 
@@ -66,12 +70,12 @@ npm run local:model -- --prompt "Summarize this repo"
 
 - Quote logic is intentionally deterministic and launch-safe.
 - The app does not claim live hotel or transport inventory.
-- Recent trip plans are persisted server-side in SQLite instead of browser-only storage.
-- Database and Firebase artifacts are still in the repo, but the running app is currently a single deployable Node service.
-- The local model workflow is documented in [docs/local-model-workflow.md](/Users/joeiton/Desktop/Rob/AndroidStudioProjects/cheapvacay/docs/local-model-workflow.md:1).
+- Trip plans are stored in **Firestore** per signed-in user; the API never trusts the client without a valid ID token.
+- The app is a single Node service (Express + static Vite build); the UI talks only to your API, not to Firestore directly.
+- The local model workflow is documented in [docs/local-model-workflow.md](docs/local-model-workflow.md).
 
 ## Launch And Deployment
 
-- Launch sequence: [LAUNCH_CHECKLIST.md](/Users/joeiton/Desktop/Rob/AndroidStudioProjects/cheapvacay/LAUNCH_CHECKLIST.md:1)
-- Deploy instructions: [DEPLOY.md](/Users/joeiton/Desktop/Rob/AndroidStudioProjects/cheapvacay/DEPLOY.md:1)
-- Deploy gate checklist: [DEPLOY_CHECKLIST.md](/Users/joeiton/Desktop/Rob/AndroidStudioProjects/cheapvacay/DEPLOY_CHECKLIST.md:1)
+- Launch sequence: [LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md)
+- Deploy instructions: [DEPLOY.md](DEPLOY.md)
+- Deploy gate checklist: [DEPLOY_CHECKLIST.md](DEPLOY_CHECKLIST.md)

@@ -1,4 +1,5 @@
 import { destinations, type DestinationRecord } from "../data/destinations.ts";
+import { getSeasonalContext } from "./seasonal.ts";
 
 export type BudgetProfile = "lean" | "smart" | "comfort";
 export type TransportPreference = "cheapest" | "balanced" | "fastest";
@@ -15,10 +16,21 @@ export type PlannerRequest = {
   stayType: StayType;
 };
 
+export type QuoteLineSource = "modeled" | "live_sample";
+
 export type QuoteBreakdown = {
   label: string;
   amount: number;
   notes: string;
+  source: QuoteLineSource;
+};
+
+export type PricingTransparency = {
+  /** High-level status for the quote header. */
+  badge: "planning_estimate" | "sample_fares_mixed" | "sample_fares_both";
+  shortTitle: string;
+  /** Honesty bullets shown above the fold. */
+  bullets: string[];
 };
 
 export type PlannerQuote = {
@@ -34,7 +46,15 @@ export type PlannerQuote = {
     comfort: string;
     complexity: string;
   };
+  /** @deprecated use transparency.badge and line sources */
   isLiveData?: boolean;
+  transparency: PricingTransparency;
+  /** Calendar / climate nuance in the model (contingency band). */
+  seasonal: {
+    monthName: string;
+    shortLabel: string;
+    lines: string[];
+  };
 };
 
 const budgetMultipliers: Record<BudgetProfile, number> = {
@@ -139,11 +159,43 @@ export function buildQuote(request: PlannerRequest, liveData: LiveDataValues = {
   const food = Math.round(destination.averageMealBudget * request.travelers * request.nights * budgetMultiplier);
   const local = Math.round(destination.localTransitDaily * request.nights * transportMultiplier);
   const activities = Math.round((destination.averageNightlyStay * 0.42) * request.nights * budgetMultiplier);
-  const contingency = Math.round((intercityTravel + stay + food + local + activities) * 0.12);
+  const baseSubtotal = intercityTravel + stay + food + local + activities;
+  const seasonal = getSeasonalContext(request.travelDate, destination);
+  const baseContingency = baseSubtotal * 0.12;
+  const contingency = Math.max(0, Math.round(baseContingency * seasonal.contingencyMultiplier));
 
-  const total = intercityTravel + stay + food + local + activities + contingency;
+  const total = baseSubtotal + contingency;
 
-  const isLiveData = !!(liveData.flightPrice || liveData.hotelPricePerNight);
+  const hasLiveFlight = Boolean(liveData.flightPrice);
+  const hasLiveStay = Boolean(liveData.hotelPricePerNight);
+  const isLiveData = hasLiveFlight || hasLiveStay;
+
+  let badge: PricingTransparency["badge"] = "planning_estimate";
+  if (hasLiveFlight && hasLiveStay) badge = "sample_fares_both";
+  else if (hasLiveFlight || hasLiveStay) badge = "sample_fares_mixed";
+
+  const transparency: PricingTransparency = {
+    badge,
+    shortTitle:
+      badge === "planning_estimate"
+        ? "Planning estimate (benchmarks only)"
+        : badge === "sample_fares_both"
+          ? "Sample live fares (flights + stay) mixed with estimates"
+          : "Mix of sample fares and benchmarks",
+    bullets: [
+      "CheapVacay is not a travel agency. We do not sell tickets, rooms, or insurance.",
+      "Totals are planning numbers to compare trips—not invoices, holds, or guaranteed prices.",
+      hasLiveFlight
+        ? "Intercity: uses a small sample of public flight offers (lowest in the set), not a chosen airline or seat."
+        : "Intercity: uses modeled regional cost bands when no bookable offer is available.",
+      hasLiveStay
+        ? "Stay: uses a few hotel list prices as a sample; it is not a confirmed reservation."
+        : "Stay: uses modeled nightly bands for your room count and style—actual hotels vary.",
+      "Food, local travel, and activities are always modeled; refine with your own receipts over time.",
+      `Season: ${seasonal.monthName} — ${seasonal.shortLabel}. Only the contingency line is nudged (not a weather or fare guarantee).`,
+      ...seasonal.lines,
+    ],
+  };
 
   const travelMode = request.transportPreference === "fastest"
     ? "Flight first, local cab/rideshare support"
@@ -156,29 +208,48 @@ export function buildQuote(request: PlannerRequest, liveData: LiveDataValues = {
     request,
     travelMode,
     isLiveData,
+    transparency,
     rationale: [
       `${destination.name} fits a ${request.nights}-night trip using ${request.stayType} lodging.`,
-      isLiveData ? "Real-time pricing data integrated for flights and stays." : "Estimated costs based on regional budget benchmarks.",
+      isLiveData
+        ? "Some lines use a small sample of public fares; the rest are modeled in INR."
+        : "Estimated costs from regional budget benchmarks in INR (no live hold).",
       `${request.budgetProfile === "lean" ? "Spend is constrained aggressively, so activities and stay quality are trimmed first." : "Budget leaves room for a cleaner stay and small experience buffer."}`,
     ],
     breakdown: [
-      { 
-        label: "Intercity travel", 
-        amount: intercityTravel, 
-        notes: liveData.flightPrice ? `Live flight fare: ${liveData.flightPrice}/person.` : `${travelMode}.` 
+      {
+        label: "Intercity travel",
+        amount: intercityTravel,
+        notes: hasLiveFlight
+          ? `Sample one-way style fare ≈ ${liveData.flightPrice} INR/person (not a hold). ${travelMode}`
+          : `${travelMode}. Modeled, not a ticket price.`,
+        source: hasLiveFlight ? "live_sample" : "modeled",
       },
-      { 
-        label: "Stay", 
-        amount: stay, 
-        notes: liveData.hotelPricePerNight ? `Live stay rate: ${liveData.hotelPricePerNight}/night for ${roomCount} room(s).` : `${roomCount} room${roomCount > 1 ? "s" : ""} in a ${request.stayType}.` 
+      {
+        label: "Stay",
+        amount: stay,
+        notes: hasLiveStay
+          ? `Sample nightly rate from a few listed hotels: ≈ ${liveData.hotelPricePerNight} INR/night for ${roomCount} room(s) (not a booking).`
+          : `${roomCount} room${roomCount > 1 ? "s" : ""} in a ${request.stayType}. Modeled band.`,
+        source: hasLiveStay ? "live_sample" : "modeled",
       },
-      { label: "Food", amount: food, notes: "Daily meal budget matched to destination price level." },
-      { label: "Local movement", amount: local, notes: "Station, airport, and local in-city movement." },
-      { label: "Activities", amount: activities, notes: "Low-friction attraction budget, not luxury tours." },
-      { label: "Contingency", amount: contingency, notes: "12% shock absorber for timing or fare drift." },
+      { label: "Food", amount: food, notes: "Daily meal band from destination benchmarks (modeled).", source: "modeled" },
+      { label: "Local movement", amount: local, notes: "Airport/station and in-city transfer band (modeled).", source: "modeled" },
+      { label: "Activities", amount: activities, notes: "Modest activities buffer—not tours sold here.", source: "modeled" },
+      {
+        label: "Contingency",
+        amount: contingency,
+        notes: `~12% of subtotal, adjusted for ${seasonal.monthName} (${seasonal.shortLabel}); not a fee—planning buffer only.`,
+        source: "modeled",
+      },
     ],
     total,
     dailyAverage: Math.round(total / Math.max(1, request.nights)),
+    seasonal: {
+      monthName: seasonal.monthName,
+      shortLabel: seasonal.shortLabel,
+      lines: seasonal.lines,
+    },
     scorecard: {
       value: request.budgetProfile === "lean" ? "High if dates stay flexible" : "Balanced value",
       comfort: request.stayType === "boutique" ? "Elevated boutique comfort" : request.budgetProfile === "comfort" ? "Above baseline comfort" : "Efficient, not indulgent",

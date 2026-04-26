@@ -28,7 +28,7 @@ export function DestinationRail({ destinations, selectedId, onSelect }: Destinat
               <img 
                 src={destination.imageUrl} 
                 alt={destination.name} 
-                style={{ width: "100%", height: "140px", objectFit: "crop" }} 
+                style={{ width: "100%", height: "140px", objectFit: "cover" }} 
               />
               <div style={{ padding: "16px", flex: 1, display: "flex", flexDirection: "column" }}>
                 <div className="destination-card-top">

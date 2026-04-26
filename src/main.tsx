@@ -1,14 +1,17 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import "./lib/firebase-app";
 import App from "./App.tsx";
 import "./index.css";
-import { applyM3Palette, generateM3Palette } from "./lib/theme";
+import { applyModernHomeyPalette } from "./lib/theme";
 
-const defaultPalette = generateM3Palette("#0f766e"); // Original accent as seed
-applyM3Palette(defaultPalette);
+applyModernHomeyPalette();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </StrictMode>,
 );

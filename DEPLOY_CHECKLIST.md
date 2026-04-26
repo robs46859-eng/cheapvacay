@@ -8,15 +8,15 @@ This is the shortest path from local rewrite to a deployable launch build.
 - Run `npm run lint`
 - Run `npm run build`
 - Run `npm run dev`
-- Confirm `/api/health` returns `{ "status": "ok" }`
-- Generate one trip quote from the UI
+- Configure Firebase env vars in `.env` and confirm `/api/health` returns `appCheckEnforce: false` locally (or `true` if `APPCHECK_ENFORCE=true`)
+- With `VITE_APPCHECK_RECAPTCHA_SITE_KEY` set, turn on `APPCHECK_ENFORCE=true` and confirm `GET /api/destinations` succeeds from the browser
+- Sign in and generate one trip quote from the UI
 - Confirm the app still works without `GEMINI_API_KEY`
 
 ## 2. Environment setup
 
 - Copy `.env.example` to `.env`
-- Set `PORT=3000`
-- Set `DATA_DIR=./data` locally
+- Set `PORT=3000`, `FIREBASE_SERVICE_ACCOUNT` (or `GOOGLE_APPLICATION_CREDENTIALS` to a key file), and the `VITE_FIREBASE_*` values from the Firebase console
 - Set `GEMINI_API_KEY` only if live Gemini responses are desired
 - Keep secrets out of git
 
@@ -37,9 +37,7 @@ This is the shortest path from local rewrite to a deployable launch build.
 ## 5. Render configuration
 
 - Add `NODE_ENV=production`
-- Add `PORT=3000` if needed by the host config
-- Attach a persistent disk and mount it at `/var/data`
-- Add `DATA_DIR=/var/data`
+- Add the same Firebase-related variables as in `.env.example` (including all `VITE_*` for the build)
 - Add `GEMINI_API_KEY` if assistant output should use Gemini instead of fallback guidance
 - Confirm `render.yaml` matches the chosen service settings if using blueprint deploy
 

@@ -32,6 +32,12 @@ export function PlannerForm({ destinations, initialDestinationId, onSubmit, load
       <div className="section-heading">
         <span className="eyebrow">Planner</span>
         <h2>Build your budget</h2>
+        <p className="homey-planner-intro">
+          You&apos;ll get a <strong>planning estimate in INR</strong>—use it to compare trips, not as a final bill.{" "}
+          <a className="homey-inline-link" href="#how-pricing-works">
+            How pricing works
+          </a>
+        </p>
       </div>
       <form
         className="planner-form"
@@ -140,11 +146,33 @@ export function PlannerForm({ destinations, initialDestinationId, onSubmit, load
                 <span key={highlight}>{highlight}</span>
               ))}
             </div>
+            {destination?.internationalVisitor ? (
+              <details className="homey-visitor-hints" style={{ marginTop: "1.25rem" }}>
+                <summary>International visitors — visa, health, advisor tips</summary>
+                <p>
+                  <strong>Visa (not legal advice):</strong> {destination.internationalVisitor.visa}
+                </p>
+                <p>
+                  <strong>Health prep:</strong> {destination.internationalVisitor.health}
+                </p>
+                <p style={{ marginBottom: 0 }}>
+                  <strong>Advisor-style tip:</strong> {destination.internationalVisitor.advisor}
+                </p>
+              </details>
+            ) : null}
           </div>
         </aside>
 
+        <details className="homey-planner-disclosure">
+          <summary>What you are (and aren&apos;t) getting</summary>
+          <p>
+            Quotes blend destination benchmarks with optional <strong>sample</strong> flight or hotel list prices. We never place a hold or take
+            payment. Your real price appears when you book on a partner or airline site.
+          </p>
+        </details>
+
         <button className="button button-primary planner-submit" disabled={loading} type="submit">
-          {loading ? "Building quote..." : "Generate quote"}
+          {loading ? "Building quote…" : "Generate planning quote"}
         </button>
       </form>
     </section>

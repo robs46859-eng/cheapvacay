@@ -2,7 +2,6 @@ import {
   argbFromHex,
   hexFromArgb,
   SchemeContent,
-  TonalPalette,
   Hct,
 } from "@material/material-color-utilities";
 
@@ -79,8 +78,47 @@ export function generateM3Palette(seedHex: string, isDark = false): M3Palette {
 export function applyM3Palette(palette: M3Palette) {
   const root = document.documentElement;
   Object.entries(palette).forEach(([key, value]) => {
-    // Convert camelCase to kebab-case
     const cssKey = `--md-sys-color-${key.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase())}`;
     root.style.setProperty(cssKey, value);
   });
+}
+
+/**
+ * "Modern Homey Minimalism" (Desktop MODERN_HOMEY_TEMPLATE):
+ * Alabaster, Soft Charcoal, Warm Sand, Sage Green, Creamy Olive, soft borders.
+ */
+export const modernHomeyPalette: M3Palette = {
+  primary: "#D4A373",
+  onPrimary: "#FFFFFF",
+  primaryContainer: "#E9EDC9",
+  onPrimaryContainer: "#2C2C2C",
+  secondary: "#CCD5AE",
+  onSecondary: "#2C2C2C",
+  secondaryContainer: "#E9EDC9",
+  onSecondaryContainer: "#2C2C2C",
+  tertiary: "#B08968",
+  onTertiary: "#FFFFFF",
+  tertiaryContainer: "#FAF9F6",
+  onTertiaryContainer: "#2C2C2C",
+  error: "#B85C5C",
+  onError: "#FFFFFF",
+  errorContainer: "#F9E5E5",
+  onErrorContainer: "#2C2C2C",
+  background: "#FAF9F6",
+  onBackground: "#2C2C2C",
+  surface: "#FFFFFF",
+  onSurface: "#2C2C2C",
+  surfaceVariant: "#E9EDC9",
+  onSurfaceVariant: "#4A4A4A",
+  outline: "#E5E5E5",
+  outlineVariant: "#E0E0E0",
+  shadow: "rgba(0,0,0,0.08)",
+  scrim: "rgba(44, 44, 44, 0.35)",
+  inverseSurface: "#2C2C2C",
+  inverseOnSurface: "#FAF9F6",
+  inversePrimary: "#E9EDC9",
+};
+
+export function applyModernHomeyPalette() {
+  applyM3Palette(modernHomeyPalette);
 }

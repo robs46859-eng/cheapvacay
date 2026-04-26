@@ -1,3 +1,9 @@
+export type InternationalVisitorHints = {
+  visa: string;
+  health: string;
+  advisor: string;
+};
+
 export type Destination = {
   id: string;
   name: string;
@@ -7,6 +13,9 @@ export type Destination = {
   imageUrl: string;
   summary: string;
   bestMonths: string[];
+  avoidMonths: string[];
+  monsoonSensitive: boolean;
+  internationalVisitor: InternationalVisitorHints;
   averageNightlyStay: number;
   averageMealBudget: number;
   localTransitDaily: number;
@@ -25,10 +34,20 @@ export type PlannerRequest = {
   stayType: "hostel" | "homestay" | "boutique";
 };
 
+export type QuoteLineSource = "modeled" | "live_sample";
+
 export type QuoteBreakdown = {
   label: string;
   amount: number;
   notes: string;
+  /** May be missing on old saved plans */
+  source?: QuoteLineSource;
+};
+
+export type PricingTransparency = {
+  badge: "planning_estimate" | "sample_fares_mixed" | "sample_fares_both";
+  shortTitle: string;
+  bullets: string[];
 };
 
 export type PlannerQuote = {
@@ -44,6 +63,15 @@ export type PlannerQuote = {
     comfort: string;
     complexity: string;
   };
+  isLiveData?: boolean;
+  /** Present on new quotes; old saved plans may omit. */
+  transparency?: PricingTransparency;
+  /** May be absent on very old saved plans. */
+  seasonal?: {
+    monthName: string;
+    shortLabel: string;
+    lines: string[];
+  };
 };
 
 export type PlannerResponse = {
@@ -54,7 +82,7 @@ export type PlannerResponse = {
 
 export type SavedTripPlan = {
   id: string;
-  userKey: string;
+  userId: string;
   createdAt: string;
   updatedAt: string;
   request: PlannerRequest;

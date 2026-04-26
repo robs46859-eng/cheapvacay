@@ -8,22 +8,22 @@ Render is still the cleanest first host because the project is a single Express 
 
 1. Push the repo to GitHub.
 2. In Render, create a new Web Service from the repo.
-3. Render can read [render.yaml](/Users/joeiton/Desktop/Rob/AndroidStudioProjects/cheapvacay/render.yaml:1) automatically, or you can set these manually:
+3. Render can read [render.yaml](render.yaml) automatically, or you can set these manually:
 
 - Build command: `npm ci && npm run build`
 - Start command: `npm start`
 - Environment: `Node`
 
-4. Add environment variables:
+4. Add environment variables (see [.env.example](.env.example)):
 
 - `NODE_ENV=production`
-- `DATA_DIR=/var/data`
-- `GEMINI_API_KEY=your_real_key`
+- `FIREBASE_SERVICE_ACCOUNT` — full service account JSON (secret), same project as Firestore
+- `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_APP_ID` — from Firebase **web** app (required at **build** time on Render)
+- `VITE_APPCHECK_RECAPTCHA_SITE_KEY` — from Firebase **App Check** (reCAPTCHA v3) for the same web app; required in production for API calls
+- `APPCHECK_ENFORCE` — optional; defaults to on in `NODE_ENV=production`
+- `GEMINI_API_KEY` — optional; otherwise the assistant uses static fallback copy
 
-5. Attach a persistent disk for the SQLite file:
-
-- Mount path: `/var/data`
-- App database file will be created at `/var/data/cheapvacay.sqlite`
+5. In Firebase: enable **Authentication** (Google), **Firestore**, and **App Check** with the reCAPTCHA v3 provider, then register your production domain. Deploy [firestore.rules](firestore.rules) (default deny; server uses the Admin SDK).
 
 ## Pre-deploy check
 
@@ -35,7 +35,7 @@ npm run build
 npm run dev
 ```
 
-Then use [DEPLOY_CHECKLIST.md](/Users/joeiton/Desktop/Rob/AndroidStudioProjects/cheapvacay/DEPLOY_CHECKLIST.md:1) as the hard deploy gate.
+Then use [DEPLOY_CHECKLIST.md](DEPLOY_CHECKLIST.md) as the hard deploy gate.
 
 ## Post-deploy smoke test
 
@@ -44,7 +44,7 @@ Then use [DEPLOY_CHECKLIST.md](/Users/joeiton/Desktop/Rob/AndroidStudioProjects/
 - Quote breakdown renders
 - Advice panel returns either Gemini output or fallback guidance
 - `/api/health` responds successfully
-- Generate a quote, redeploy or restart the service, and confirm the saved plan still appears
+- Sign in, generate a quote, open the app on another device with the same Google account, and confirm the plan list matches
 
 ## Immediate next improvement
 
